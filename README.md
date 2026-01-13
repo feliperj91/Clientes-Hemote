@@ -1,72 +1,86 @@
 # Clientes Hemote Plus - v11 🩸
 
-**Ferramenta essencial para gerenciamento rápido e seguro de ambientes de clientes Hemote.**
+**Ferramenta de produtividade para gerenciamento de ambientes Hemote.**
 
-O **Clientes Hemote Plus** é um utilitário desenvolvido em PowerShell (com interface Windows Forms e C# integrado) para facilitar a vida de quem precisa alternar constantemente entre configurações de diferentes clientes no sistema Hemote. Ele automatiza a troca de arquivos de configuração, valida duplicidades e oferece uma interface moderna e produtiva.
-
----
-
-## 🚀 Funcionalidades
-
-*   **⚡ Troca Rápida:** Alterne entre clientes em segundos. O sistema copia automaticamente `_data_access.ini`, `WebUpdate.ini` e logos para a pasta `C:\SACS`.
-*   **🌙 Modo Escuro (Dark Mode):** Interface moderna que respeita seus olhos, com suporte nativo à barra de título escura do Windows 10 e 11.
-*   **🛡️ Validação de Duplicidade:** Evite erros de configuração! O sistema alerta se você tentar usar um cliente que possui o mesmo `COD_HEM` ou URL de atualização de outro já cadastrado.
-*   **📂 Atalhos Inteligentes:** Atualiza automaticamente os atalhos na sua área de trabalho/pasta de atalhos, renomeando-os com o nome do cliente ativo.
-*   **👻 Tray Icon:** O programa roda discretamente na bandeja do sistema (perto do relógio) e pode iniciar minimizado.
-*   **🚀 Inicialização Automática:** Opção para iniciar junto com o Windows.
-*   **✏️ Edição Rápida:** Permite alterar o `COD_HEM` manualmente após a seleção.
+O **Clientes Hemote Plus** é um utilitário desenvolvido para agilizar a rotina de quem precisa alternar frequentemente entre configurações de diferentes clientes. Com foco em produtividade, ele automatiza a cópia de arquivos de configuração e gerencia atalhos, tudo através de uma interface discreta que reside na bandeja do sistema.
 
 ---
 
-## 📋 Pré-requisitos
+## 🚀 Funcionalidades Confirmadas
 
-*   **Sistema Operacional:** Windows 10 ou Windows 11.
-*   **Estrutura de Pastas:**
-    *   O sistema espera que exista uma pasta `C:\SACS`.
-    *   Dentro dela, deve haver uma pasta com os clientes (ex: `C:\SACS\CLIENTES`) contendo subpastas para cada cliente.
-
----
-
-## 🛠️ Como Usar (Passo a Passo)
-
-1.  **Execução:**
-    *   Abra o arquivo `Clientes Hemote.exe`.
-    *   O ícone aparecerá na barra de tarefas e na bandeja do sistema.
-
-2.  **Configuração Inicial (Primeira vez):**
-    *   Vá no menu **Configurações > Clientes**.
-    *   Selecione a pasta onde estão as pastas dos seus clientes (ex: `C:\SACS\CLIENTES`).
-    *   O sistema irá carregar a lista automaticamente.
-
-3.  **Trocando de Cliente:**
-    *   Na tela inicial, clique na lista (ComboBox) e selecione o cliente desejado.
-    *   Clique no botão azul **Confirmar**.
-    *   ✅ **Pronto!** Os arquivos foram copiados, o status no rodapé foi atualizado e os atalhos foram renomeados.
-
-4.  **Ajustes Visuais e Extras:**
-    *   **Modo Escuro:** Vá em *Exibição > Modo Escuro*.
-    *   **Opacidade:** Ajuste a transparência da janela em *Exibição > Opacidade*.
-    *   **Sempre Visível:** Mantenha a janela sobre as outras em *Exibição > Sempre Visível*.
+*   **⚡ Troca Rápida de Ambiente:** Altera automaticamente os arquivos `_data_access.ini`, `WebUpdate.ini` e logos na pasta raiz `C:\SACS`.
+*   **🕵️‍♂️ Comportamento "Stealth" (Bandeja do Sistema):** O programa **não ocupa espaço na sua barra de tarefas**. Ele fica acessível exclusivamente pelo ícone na **Bandeja do Sistema** (ao lado do relógio do Windows), ideal para manter aberto o dia todo sem poluir sua área de trabalho.
+*   **🌙 Modo Escuro Inteligente:** Interface adaptada com suporte a *Dark Mode* real (incluindo a barra de título) no Windows 10 e 11.
+*   **🛡️ Auditoria de Duplicidade:** O sistema escaneia todos os clientes e impede que você selecione um ambiente que tenha o mesmo código (`COD_HEM`) ou URL de conexão de outro cliente já mapeado, evitando erros operacionais.
+*   **🔗 Gestão Automática de Atalhos:** Ao trocar de cliente, o sistema busca atalhos na pasta `C:\SACS\atalhos\Hemote Plus Update` e os renomeia com o nome do cliente atual (ex: `Hemote - Unimed.lnk`), facilitando a identificação visual.
+*   **📝 Edição de COD_HEM:** Permite alterar o código da unidade manualmente através de um diálogo dedicado, caso necessário.
+*   **👻 Sempre em Segundo Plano:** Ao clicar no "X" para fechar, o programa apenas se esconde na bandeja, pronto para ser chamado novamente.
 
 ---
 
-## ⚠️ Estrutura de Arquivos Esperada
+## 📋 Pré-requisitos do Sistema
 
-Para que o sistema reconheça um cliente, a pasta dele deve conter:
-*   `_data_access.ini`
-*   `WebUpdate.ini`
+Para o funcionamento correto, assegure-se de que sua máquina possui:
+1.  **Sistema Operacional:** Windows 10 ou Windows 11.
+2.  **Estrutura de Pastas Obrigatória:**
+    *   `C:\SACS` (Raiz do sistema)
+    *   `C:\SACS\CLIENTES` (Ou outra pasta contendo as subpastas de cada cliente)
+    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update` (Para a funcionalidade de renomear atalhos funcionar).
 
 ---
 
-## 📦 Compilação (Para Desenvolvedores)
+## 🛠️ Passo a Passo: Como Utilizar
 
-Se você baixou o código fonte (`.ps1`), pode gerar o executável usando o **PS2EXE** ou similar. Certifique-se de usar os parâmetros:
-*   `-noConsole` (Para não abrir a tela preta)
-*   `-sta` (Single Threaded Apartment, necessário para Windows Forms)
+Siga este guia para configurar e operar o sistema corretamente.
+
+### 1️⃣ Instalação e Primeira Execução
+1.  Baixe e coloque o arquivo `Clientes Hemote.exe` em um local seguro (ex: `C:\SACS` ou sua Área de Trabalho).
+2.  Execute o arquivo.
+    *   ⚠ **Atenção:** O programa **NÃO** aparecerá na barra horizontal inferior do Windows. Procure pelo ícone de uma **Gota de Sangue 🩸** perto do relógio (pode ser necessário clicar na setinha `^` para mostrar ícones ocultos).
+3.  Dê um duplo clique no ícone da gota para abrir a janela principal.
+
+### 2️⃣ Configurando a Pasta de Clientes
+Antes de usar, você precisa dizer ao programa onde os dados dos clientes estão salvos:
+1.  Na janela do programa, clique no menu superior **Configurações**.
+2.  Clique em **Clientes**.
+3.  Uma janela de seleção de pasta abrirá. Navegue e selecione a pasta que contém as subpastas dos clientes (Geralmente `C:\SACS\CLIENTES`).
+4.  O sistema irá carregar a lista imediatamente.
+
+### 3️⃣ Trocando de Cliente (Uso Diário)
+1.  Abra o programa (duplo clique no ícone da bandeja).
+2.  Na lista (ComboBox), selecione o nome do cliente desejado.
+3.  Clique no botão azul **Confirmar**.
+    *   O sistema copiará os arquivos.
+    *   Os atalhos serão renomeados.
+    *   Uma mensagem verde confirmará o sucesso no rodapé.
+4.  Pode fechar a janela (ela voltará para a bandeja) e iniciar seu trabalho no sistema Hemote.
+
+### 4️⃣ Configurando Opções Extras
+No menu **Exibição**, você pode personalizar sua experiência:
+*   **Modo Escuro:** Alterna as cores da interface, ideal para ambientes com pouca luz.
+*   **Sempre Visível:** Mantém a janelinha do programa flutuando acima de qualquer outra janela aberta (útil durante manutenções).
+*   **Opacidade:** Deixa a janela transparente (estilo "Fantasma") para ver o que está atrás.
+
+### 5️⃣ Como Fechar o Programa Definitivamente
+Como o botão "X" apenas minimiza o programa para a bandeja:
+1.  Clique com o **botão direito** no ícone da Gota de Sangue 🩸 lá perto do relógio.
+2.  Selecione a opção **Sair**.
+
+---
+
+## ❓ Resolução de Problemas Comuns
+
+**"Não encontro o ícone do programa!"**
+> O Windows costuma esconder ícones pouco usados. Clique na setinha `^` na barra de tarefas (canto inferior direito) e arraste o ícone da gota para fora, deixando-o sempre visível.
+
+**"O Dark Mode não deixou a barra de título preta."**
+> A barra de título escura requer Windows 10 (versão 2004 ou superior) ou Windows 11. Em versões antigas do Windows 10 ou anteriores, a barra permanecerá da cor padrão do sistema, mas o restante da interface ficará escuro.
+
+**"Erro: Conflito de Duplicidade"**
+> O programa detectou que o cliente que você tentou selecionar possui o mesmo `COD_HEM` ou `URL` de outro cliente na pasta. Verifique os arquivos `.ini` desses clientes para corrigir a duplicidade.
 
 ---
 
 ## 👨‍💻 Créditos
-
 Desenvolvido por **Felipe Almeida**.
-*Última atualização: Janeiro de 2026*
+*Versão 11 - Janeiro de 2026*
