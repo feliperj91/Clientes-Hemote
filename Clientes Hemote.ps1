@@ -13,19 +13,51 @@ if (-not $refCreatedNew.Value) {
 $script:exiting = $false
 $configFile = "C:\SACS\config.json"
 $global:clientesPath = "C:\SACS\CLIENTES"
+$global:clientCache = @{} # Armazena info dos clientes para performance (Path, CodHem, Url)
 
-# Função para carregar clientes
+# Função para carregar clientes e popular cache (Otimização)
 function Load-Clientes {
     $comboBox.Items.Clear()
+    $global:clientCache.Clear()
+
     if (Test-Path $global:clientesPath) {
+        $statusLabel.Text = "Carregando clientes..."
+        [System.Windows.Forms.Application]::DoEvents()
+
         Get-ChildItem -Path $global:clientesPath -Directory | ForEach-Object {
             $clientePath = $_.FullName
-            $iniExists = Test-Path (Join-Path $clientePath "_data_access.ini")
-            $webExists = Test-Path (Join-Path $clientePath "WebUpdate.ini")
-            if ($iniExists -and $webExists) {
-                $comboBox.Items.Add($_.Name) | Out-Null
+            $nome = $_.Name
+            $iniPath = Join-Path $clientePath "_data_access.ini"
+            $webPath = Join-Path $clientePath "WebUpdate.ini"
+
+            if ((Test-Path $iniPath) -and (Test-Path $webPath)) {
+                $comboBox.Items.Add($nome) | Out-Null
+                
+                # Pré-carregar dados para o cache (evita lentidão no clique confirmar)
+                $codHem = ""
+                $url = ""
+                
+                try {
+                    $cIni = Get-Content $iniPath -Raw -ErrorAction SilentlyContinue
+                    if ($cIni -match '(?im)^\s*N\s*=\[_ws_url\]\s*=\s*(.+)$') { 
+                        $codHem = $matches[1].Trim() 
+                    }
+                    
+                    $cWeb = Get-Content $webPath -Raw -ErrorAction SilentlyContinue
+                    if ($cWeb -match '(?im)^\s*URL\s*=\s*(.+)$') { 
+                        $url = $matches[1].Trim() 
+                    }
+                }
+                catch {}
+
+                $global:clientCache[$nome] = @{
+                    Path   = $clientePath
+                    CodHem = $codHem
+                    Url    = $url
+                }
             }
         }
+        $statusLabel.Text = "Pronto."
     }
 }
 
@@ -162,12 +194,48 @@ $form.MaximizeBox = $false
 $form.StartPosition = 'Manual'
 $form.ShowInTaskbar = $false
 
+
 # Posiciona no canto inferior direito
 $form.Add_Load({
         $wa = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
         $x = $wa.X + $wa.Width - $form.Width
         $y = $wa.Y + $wa.Height - $form.Height
         $form.Location = New-Object System.Drawing.Point($x, $y)
+
+        # --- RECRIANDO TRAY ICON NO LOAD (Para garantir visibilidade) ---
+        $script:notifyIcon = New-Object System.Windows.Forms.NotifyIcon
+        $script:notifyIcon.Text = 'Clientes Hemote Plus'
+        
+        # Usa o ícone do próprio executável (que sabemos que existe)
+        try {
+            $exePath = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
+            $script:notifyIcon.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
+        }
+        catch {
+            $script:notifyIcon.Icon = [System.Drawing.SystemIcons]::Application
+        }
+        
+        $script:notifyIcon.Visible = $true
+
+        # Menu de Contexto
+        $trayMenu = New-Object System.Windows.Forms.ContextMenuStrip
+        $trayMenu.Items.Add('Abrir').Add_Click({
+                $form.Show()
+                $form.WindowState = 'Normal'
+                $form.Activate()
+            })
+        $trayMenu.Items.Add('Sair').Add_Click({
+                $script:exiting = $true
+                $script:notifyIcon.Visible = $false
+                $form.Close()
+                [System.Windows.Forms.Application]::Exit()
+            })
+        $script:notifyIcon.ContextMenuStrip = $trayMenu
+        $script:notifyIcon.Add_DoubleClick({ 
+                $form.Show()
+                $form.WindowState = 'Normal'
+                $form.Activate()
+            })
     })
 
 # StatusStrip (rodapé)
@@ -325,8 +393,14 @@ $menuIniciarWindows.Add_Click({
         Set-Startup $menuIniciarWindows.Checked
     }) | Out-Null
 
+$menuValidarDuplicidade = New-Object System.Windows.Forms.ToolStripMenuItem
+$menuValidarDuplicidade.Text = 'Validar duplicidade de URL'
+$menuValidarDuplicidade.CheckOnClick = $true
+$menuValidarDuplicidade.Add_Click({ Save-Config }) | Out-Null
+
 $menuConfig.DropDownItems.Add($menuClientes)       | Out-Null
 $menuConfig.DropDownItems.Add($menuAlterarCodHem)  | Out-Null
+$menuConfig.DropDownItems.Add($menuValidarDuplicidade) | Out-Null
 $menuConfig.DropDownItems.Add($menuIniciarWindows) | Out-Null
 
 # --- Menu Exibição ---
@@ -419,6 +493,10 @@ $menuIniciarWindows.Add_MouseHover({
         $statusLabel.Text = "Habilitar ou desabilitar inicialização automática com o Windows"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
+$menuValidarDuplicidade.Add_MouseHover({ 
+        $statusLabel.Text = "Verificar se existe duplicidade de data_access e webupdate."
+        $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
+    })
 
 # Submenus de Exibição
 $menuClienteAtual.Add_MouseHover({ 
@@ -466,9 +544,10 @@ function Save-Config {
             CodHemAtual         = $menuCodHemAtual.Checked
         }
         Configuracoes = @{
-            AlterarCodHem     = $menuAlterarCodHem.Checked
-            IniciarComWindows = $menuIniciarWindows.Checked
-            ClienteDefinido   = $clienteDefinido
+            AlterarCodHem      = $menuAlterarCodHem.Checked
+            IniciarComWindows  = $menuIniciarWindows.Checked
+            ValidarDuplicidade = $menuValidarDuplicidade.Checked
+            ClienteDefinido    = $clienteDefinido
         }
     }
 
@@ -493,6 +572,15 @@ function Load-Config {
 
         $menuAlterarCodHem.Checked = $json.Configuracoes.AlterarCodHem
         $menuIniciarWindows.Checked = $json.Configuracoes.IniciarComWindows
+        
+        # Carrega ValidarDuplicidade (padrão true se não existir no JSON para manter comportamento anterior)
+        if ($json.Configuracoes.PSObject.Properties.Match('ValidarDuplicidade').Count) {
+            $menuValidarDuplicidade.Checked = $json.Configuracoes.ValidarDuplicidade
+        }
+        else {
+            $menuValidarDuplicidade.Checked = $true
+        }
+
         $menuClienteAtual.Checked = $json.Exibicao.ClienteAtual
         $menuCodHemAtual.Checked = $json.Exibicao.CodHemAtual
 
@@ -500,9 +588,11 @@ function Load-Config {
         Set-Startup $menuIniciarWindows.Checked
     }
     else {
+        # Defaults para nova instalação/configuração ausente
         $menuLocalizacao.Checked = $true
         $menuClienteAtual.Checked = $true
         $menuCodHemAtual.Checked = $true
+        $menuValidarDuplicidade.Checked = $true
     }
     Update-Status
 }
@@ -532,52 +622,15 @@ function Set-Startup($enable) {
 }
 
 # --- Ícone da bandeja ---
-$notifyIcon = New-Object System.Windows.Forms.NotifyIcon
-$notifyIcon.Visible = $true
-$notifyIcon.Text = 'Clientes Hemote Plus'
 
-$icoPath = 'C:\BASES HEMOTE\V8\sangue.ico'
-if (Test-Path $icoPath) {
-    try {
-        $notifyIcon.Icon = New-Object System.Drawing.Icon($icoPath)
-        $form.Icon = $notifyIcon.Icon
-    }
-    catch {
-        # Se falhar ao carregar o ícone externo, usa o ícone embutido no .exe
-        $exePath = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
-        $notifyIcon.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
-        $form.Icon = $notifyIcon.Icon
-    }
-}
-else {
-    # Se o arquivo não existir, usa o ícone embutido no .exe
-    $exePath = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
-    $notifyIcon.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
-    $form.Icon = $notifyIcon.Icon
-}
 function Show-Form {
     $form.Show()
     $form.WindowState = 'Normal'
-    $form.ShowInTaskbar = $false
+    $form.Activate()
 }
 
+# (Código do Tray movido para o Load)
 
-# --- Menu da bandeja ---
-$trayMenu = New-Object System.Windows.Forms.ContextMenuStrip
-$trayAbrir = $trayMenu.Items.Add('Abrir')
-$traySair = $trayMenu.Items.Add('Sair')
-$trayAbrir.Add_Click({ Show-Form }) | Out-Null
-$traySair.Add_Click({
-        Save-Config
-        $script:exiting = $true
-        try { $mutex.ReleaseMutex() } catch {}
-        try { $notifyIcon.Visible = $false; $notifyIcon.Dispose() } catch {}
-        try { $form.Close() } catch {}
-        [System.Windows.Forms.Application]::Exit()
-        [System.Environment]::Exit(0)
-    }) | Out-Null
-$notifyIcon.ContextMenuStrip = $trayMenu
-$notifyIcon.Add_DoubleClick({ Show-Form }) | Out-Null
 
 # --- Eventos de minimizar e fechar ---
 $form.Add_Resize({
@@ -603,6 +656,7 @@ Load-Config
 Update-Status
 
 # --- Botão Confirmar ---
+# --- Botão Confirmar (Refatorado e Otimizado com Cache) ---
 $button.Add_Click({
         $cliente = $comboBox.SelectedItem
         if (-not $cliente) { 
@@ -611,10 +665,41 @@ $button.Add_Click({
             return 
         }
 
-        try {
-            $origemCliente = Join-Path $global:clientesPath $cliente
+        # 1. Validação de Duplicidade (Usando Cache - Ultra Rápido)
+        if ($menuValidarDuplicidade.Checked) {
+            $dadosAtual = $global:clientCache[$cliente]
+            if ($dadosAtual) {
+                $duplicados = @()
+                $global:clientCache.GetEnumerator() | ForEach-Object {
+                    if ($_.Key -ne $cliente) {
+                        $dadosOutro = $_.Value
+                        if ($dadosAtual.CodHem -ne "" -and $dadosAtual.CodHem -eq $dadosOutro.CodHem) {
+                            $duplicados += "$($_.Key) (mesmo ws_url)"
+                        }
+                        elseif ($dadosAtual.Url -ne "" -and $dadosAtual.Url -eq $dadosOutro.Url) {
+                            $duplicados += "$($_.Key) (mesma URL)"
+                        }
+                    }
+                }
 
-            # Arquivos que vão para C:\SACS
+                if ($duplicados.Count -gt 0) {
+                    $msgLabel.Text = "Duplicidade detectada com: " + ($duplicados -join ', ')
+                    return
+                }
+            }
+        }
+
+        # 2. Cópia de Arquivos
+        try {
+            if ($global:clientCache[$cliente]) {
+                $origemCliente = $global:clientCache[$cliente].Path
+            }
+            else {
+                # Fallback caso cache falhe por algum motivo raro
+                $origemCliente = Join-Path $global:clientesPath $cliente
+            }
+
+            # Arquivos para C:\SACS
             foreach ($arquivo in @("_data_access.ini", "logo.jpg", "logo2.jpg")) {
                 $origem = Join-Path $origemCliente $arquivo
                 if (Test-Path $origem) {
@@ -622,98 +707,34 @@ $button.Add_Click({
                 }
             }
 
-            # Arquivo WebUpdate.ini vai para C:\SACS\BootStrap
-            $origemWebUpdate = Join-Path $origemCliente "WebUpdate.ini"
-            if (Test-Path $origemWebUpdate) {
-                $destinoBootStrap = "C:\SACS\BootStrap"
-                if (-not (Test-Path $destinoBootStrap)) {
-                    New-Item -ItemType Directory -Path $destinoBootStrap | Out-Null
-                }
-                Copy-Item -Path $origemWebUpdate -Destination $destinoBootStrap -Force -ErrorAction Stop
+            # Arquivo WebUpdate.ini
+            $origemWeb = Join-Path $origemCliente "WebUpdate.ini"
+            if (Test-Path $origemWeb) {
+                $destBoot = "C:\SACS\BootStrap"
+                if (-not (Test-Path $destBoot)) { New-Item -ItemType Directory -Path $destBoot | Out-Null }
+                Copy-Item -Path $origemWeb -Destination $destBoot -Force -ErrorAction Stop
             }
+        
         }
         catch {
-            $msgLabel.Text = "Erro ao copiar arquivos: $($_.Exception.Message)"
-            $clearMsgTimer.Stop(); $clearMsgTimer.Start()
-            return
-        }
-	
-        # --- Validação de duplicidade ---
-        $clientesDuplicados = @()
-
-        # Pega valores do cliente selecionado
-        $origemCliente = Join-Path $global:clientesPath $cliente
-        $iniPath = Join-Path $origemCliente "_data_access.ini"
-        $webUpdatePath = Join-Path $origemCliente "WebUpdate.ini"
-
-        $codHemSelecionado = ""
-        $urlSelecionado = ""
-
-        if (Test-Path $iniPath) {
-            $contentIni = Get-Content $iniPath -Raw
-            $match = [regex]::Match($contentIni, '(?im)^\s*N\s*=\[_ws_url\]\s*=\s*(.+)$')
-            if ($match.Success) { $codHemSelecionado = $match.Groups[1].Value.Trim() }
-        }
-
-        if (Test-Path $webUpdatePath) {
-            $contentWeb = Get-Content $webUpdatePath -Raw
-            $matchUrl = [regex]::Match($contentWeb, '(?im)^\s*URL\s*=\s*(.+)$')
-            if ($matchUrl.Success) { $urlSelecionado = $matchUrl.Groups[1].Value.Trim() }
-        }
-
-        # Comparar com outros clientes
-        Get-ChildItem -Path $global:clientesPath -Directory | ForEach-Object {
-            if ($_.Name -ne $cliente) {
-                $outroCliente = $_.Name
-                $outroIni = Join-Path $_.FullName "_data_access.ini"
-                $outroWeb = Join-Path $_.FullName "WebUpdate.ini"
-
-                $codHemOutro = ""
-                $urlOutro = ""
-
-                if (Test-Path $outroIni) {
-                    $cIni = Get-Content $outroIni -Raw
-                    $mIni = [regex]::Match($cIni, '(?im)^\s*N\s*=\[_ws_url\]\s*=\s*(.+)$')
-                    if ($mIni.Success) { $codHemOutro = $mIni.Groups[1].Value.Trim() }
-                }
-
-                if (Test-Path $outroWeb) {
-                    $cWeb = Get-Content $outroWeb -Raw
-                    $mWeb = [regex]::Match($cWeb, '(?im)^\s*URL\s*=\s*(.+)$')
-                    if ($mWeb.Success) { $urlOutro = $mWeb.Groups[1].Value.Trim() }
-                }
-
-                if ($codHemSelecionado -ne "" -and $codHemSelecionado -eq $codHemOutro) {
-                    $clientesDuplicados += "$outroCliente (duplicado em _data_access.ini)"
-                }
-                elseif ($urlSelecionado -ne "" -and $urlSelecionado -eq $urlOutro) {
-                    $clientesDuplicados += "$outroCliente (duplicado em WebUpdate.ini)"
-                }
-            }
-        }
-
-
-        if ($clientesDuplicados.Count -gt 0) {
-            $msgLabel.Text = "Duplicidade detectada: $cliente igual a " + ($clientesDuplicados -join ', ')
+            $msgLabel.Text = "Erro na cópia: $($_.Exception.Message)"
             return
         }
 
-        # Se opção Alterar cod_hem marcada, abre diálogo COD_HEM
+        # 3. Alteração de COD_HEM (Opcional)
         if ($menuAlterarCodHem.Checked) {
             Show-CodHemDialog
         }
 
-        # Atualiza config.json com cliente definido
-        $config = if (Test-Path $configFile) {
-            Get-Content $configFile | ConvertFrom-Json
-        }
-        else {
-            @{ ClientesPath = $global:clientesPath; Exibicao = @{}; Configuracoes = @{} }
-        }
+        # 4. Salvar Configuração Atual
+        $config = if (Test-Path $configFile) { Get-Content $configFile | ConvertFrom-Json } else { @{ Configuracoes = @{} } }
         if (-not $config.Configuracoes) { $config.Configuracoes = @{} }
         $config.Configuracoes.ClienteDefinido = $cliente
+        if (-not $config.Exibicao) { $config.Exibicao = @{ Opacidade = 100 } }
+        if (-not $config.Configuracoes.ValidarDuplicidade) { $config.Configuracoes.ValidarDuplicidade = $menuValidarDuplicidade.Checked }
+
         $config | ConvertTo-Json | Set-Content $configFile -Encoding UTF8
-	
+    
         # --- Mapeamento e atualização dos atalhos ---
         $atalhosPath = "C:\SACS\atalhos\Hemote Plus Update"
         if (Test-Path $atalhosPath) {
@@ -737,7 +758,15 @@ $button.Add_Click({
 
                 # Renomeia se necessário
                 if ($atalhoOriginal -ne $novoCaminho) {
-                    Rename-Item -Path $atalhoOriginal -NewName $novoNome -Force
+                    if (Test-Path $novoCaminho) {
+                        # CONFLITO: O arquivo de destino já existe!
+                        # Isso acontece quando há duplicatas (ex: "Arquivo.lnk" e "Arquivo - Old.lnk").
+                        # Solução: Removemos este arquivo redundante para limpar a pasta e manter apenas um atualizado.
+                        Remove-Item -Path $atalhoOriginal -Force
+                    }
+                    else {
+                        Rename-Item -Path $atalhoOriginal -NewName $novoNome -Force
+                    }
                 }
             }
         }
