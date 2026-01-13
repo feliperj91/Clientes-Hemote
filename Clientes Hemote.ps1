@@ -1,5 +1,34 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+[System.Windows.Forms.Application]::EnableVisualStyles()
+
+# Classe auxiliar para manipular Title Bar (Dark Mode nativo do Windows)
+$code = @"
+using System;
+using System.Runtime.InteropServices;
+public class Win32 {
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+    public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled) {
+        if (IsWindows10OrGreater(17763)) {
+            int attribute = DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
+            if (IsWindows10OrGreater(18985)) {
+                attribute = DWMWA_USE_IMMERSIVE_DARK_MODE;
+            }
+            int useImmersiveDarkMode = enabled ? 1 : 0;
+            return DwmSetWindowAttribute(handle, attribute, ref useImmersiveDarkMode, sizeof(int)) == 0;
+        }
+        return false;
+    }
+    private static bool IsWindows10OrGreater(int build = -1) {
+        return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
+    }
+}
+"@
+Add-Type -TypeDefinition $code -Language CSharp
 
 # Mutex para evitar múltiplas instâncias
 $createdNew = $false
@@ -21,7 +50,7 @@ function Load-Clientes {
     $global:clientCache.Clear()
 
     if (Test-Path $global:clientesPath) {
-        $statusLabel.Text = "Carregando clientes..."
+        $statusLabelClient.Text = "Carregando clientes..."
         [System.Windows.Forms.Application]::DoEvents()
 
         Get-ChildItem -Path $global:clientesPath -Directory | ForEach-Object {
@@ -33,7 +62,7 @@ function Load-Clientes {
             if ((Test-Path $iniPath) -and (Test-Path $webPath)) {
                 $comboBox.Items.Add($nome) | Out-Null
                 
-                # Pré-carregar dados para o cache (evita lentidão no clique confirmar)
+                # Pré-carregar dados para o cache
                 $codHem = ""
                 $url = ""
                 
@@ -57,7 +86,7 @@ function Load-Clientes {
                 }
             }
         }
-        $statusLabel.Text = "Pronto."
+        $statusLabelClient.Text = "Pronto."
     }
 }
 
@@ -102,35 +131,48 @@ function Atualizar-CodHem($valor) {
 function Show-CodHemDialog {
     $dialog = New-Object System.Windows.Forms.Form
     $dialog.Text = "Alterar COD_HEM"
-    $dialog.Size = New-Object System.Drawing.Size(300, 150)
+    $dialog.Size = New-Object System.Drawing.Size(320, 180) # Moderno
     $dialog.StartPosition = "CenterParent"
     $dialog.FormBorderStyle = 'FixedDialog'
     $dialog.MaximizeBox = $false
     $dialog.MinimizeBox = $false
     $dialog.KeyPreview = $true
+    $dialog.BackColor = [System.Drawing.Color]::White
+    $dialog.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 
     $label = New-Object System.Windows.Forms.Label
     $label.Text = "Digite o COD_HEM que deseja acessar:"
-    $label.Location = New-Object System.Drawing.Point(10, 10)
-    $label.Size = New-Object System.Drawing.Size(260, 20)
+    $label.Location = New-Object System.Drawing.Point(15, 15)
+    $label.AutoSize = $true
     $dialog.Controls.Add($label)
 
     $textBox = New-Object System.Windows.Forms.TextBox
-    $textBox.Location = New-Object System.Drawing.Point(10, 35)
-    $textBox.Size = New-Object System.Drawing.Size(260, 20)
+    $textBox.Location = New-Object System.Drawing.Point(18, 45)
+    $textBox.Size = New-Object System.Drawing.Size(260, 25)
     $dialog.Controls.Add($textBox)
 
     $btnConfirmar = New-Object System.Windows.Forms.Button
     $btnConfirmar.Text = "Confirmar"
-    $btnConfirmar.Location = New-Object System.Drawing.Point(50, 70)
-    $btnConfirmar.Size = New-Object System.Drawing.Size(80, 25)
+    $btnConfirmar.Location = New-Object System.Drawing.Point(50, 90)
+    $btnConfirmar.Size = New-Object System.Drawing.Size(90, 30)
+    $btnConfirmar.FlatStyle = 'Flat'
+    $btnConfirmar.FlatAppearance.BorderSize = 0
+    $btnConfirmar.BackColor = [System.Drawing.Color]::DodgerBlue
+    $btnConfirmar.ForeColor = [System.Drawing.Color]::White
+    $btnConfirmar.Cursor = [System.Windows.Forms.Cursors]::Hand
     $btnConfirmar.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $dialog.Controls.Add($btnConfirmar)
 
     $btnCancelar = New-Object System.Windows.Forms.Button
     $btnCancelar.Text = "Cancelar"
-    $btnCancelar.Location = New-Object System.Drawing.Point(150, 70)
-    $btnCancelar.Size = New-Object System.Drawing.Size(80, 25)
+    $btnCancelar.Location = New-Object System.Drawing.Point(160, 90)
+    $btnCancelar.Size = New-Object System.Drawing.Size(90, 30)
+    $btnCancelar.FlatStyle = 'Flat'
+    $btnCancelar.FlatAppearance.BorderSize = 1
+    $btnCancelar.FlatAppearance.BorderColor = [System.Drawing.Color]::LightGray
+    $btnCancelar.BackColor = [System.Drawing.Color]::White
+    $btnCancelar.ForeColor = [System.Drawing.Color]::Black
+    $btnCancelar.Cursor = [System.Windows.Forms.Cursors]::Hand
     $btnCancelar.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $dialog.Controls.Add($btnCancelar)
 
@@ -163,36 +205,45 @@ function Show-CodHemDialog {
     }
 }
 # Função para atualizar status no rodapé
+# Função para atualizar status no rodapé (Segmentado)
 function Update-Status {
-    $texto = ""
-    if ($menuLocalizacao.Checked) { $texto += "$global:clientesPath  " }
+    $textoEsq = " "
+    
+    $textoEsq = " "
+
+    # 2. Atualiza Cliente
     if ($menuClienteAtual.Checked) {
+        $cliConfig = ""
         if (Test-Path $configFile) {
-            $json = Get-Content $configFile | ConvertFrom-Json
-            $clienteDefinido = $json.Configuracoes.ClienteDefinido
-            if ($clienteDefinido) {
-                if ($texto) { $texto += "   " }
-                $texto += " $clienteDefinido  "
-            }
+            try { $json = Get-Content $configFile | ConvertFrom-Json; $cliConfig = $json.Configuracoes.ClienteDefinido } catch {}
         }
+        $val = if ($cliConfig) { $cliConfig } else { "---" }
+        $textoEsq += "Cliente: $val"
     }
+    
+    $statusLabelClient.Text = $textoEsq
+
+    # 3. Atualiza CodHem
     if ($menuCodHemAtual.Checked) {
-        $codHem = Get-CodHemAtual
-        if ($texto) { $texto += "   " }
-        if ($codHem) { $texto += "$codHem" }
-        else { $texto += "COD_HEM: (não definido)" }
+        $valCod = Get-CodHemAtual
+        if (-not $valCod) { $valCod = "---" }
+        $statusLabelCod.Text = " COD: $valCod "
     }
-    $statusLabel.Text = $texto
+    else {
+        $statusLabelCod.Text = ""
+    }
 }
 
 # Form principal
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Clientes Hemote Plus'
-$form.Size = New-Object System.Drawing.Size(420, 200)
-$form.FormBorderStyle = 'FixedDialog'
+$form.Size = New-Object System.Drawing.Size(530, 210) # Expandido para caber mensagens longas
+$form.FormBorderStyle = 'FixedSingle' # Permite exibir o ícone na barra de título
 $form.MaximizeBox = $false
 $form.StartPosition = 'Manual'
 $form.ShowInTaskbar = $false
+$form.Font = New-Object System.Drawing.Font("Segoe UI", 10) # Fonte Moderna
+$form.BackColor = [System.Drawing.Color]::White # Fundo Clean
 
 
 # Posiciona no canto inferior direito
@@ -201,90 +252,101 @@ $form.Add_Load({
         $x = $wa.X + $wa.Width - $form.Width
         $y = $wa.Y + $wa.Height - $form.Height
         $form.Location = New-Object System.Drawing.Point($x, $y)
-
-        # --- RECRIANDO TRAY ICON NO LOAD (Para garantir visibilidade) ---
-        $script:notifyIcon = New-Object System.Windows.Forms.NotifyIcon
-        $script:notifyIcon.Text = 'Clientes Hemote Plus'
         
-        # Usa o ícone do próprio executável (que sabemos que existe)
-        try {
-            $exePath = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
-            $script:notifyIcon.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
-        }
-        catch {
-            $script:notifyIcon.Icon = [System.Drawing.SystemIcons]::Application
-        }
-        
-        $script:notifyIcon.Visible = $true
+        # Garante que o Dark Mode seja aplicado assim que a janela for criada (Handle existe)
+        $form.Add_HandleCreated({
+                try { [Win32]::UseImmersiveDarkMode($form.Handle, $menuModoEscuro.Checked) | Out-Null } catch {}
+            })
 
-        # Menu de Contexto
-        $trayMenu = New-Object System.Windows.Forms.ContextMenuStrip
-        $trayMenu.Items.Add('Abrir').Add_Click({
-                $form.Show()
-                $form.WindowState = 'Normal'
-                $form.Activate()
-            })
-        $trayMenu.Items.Add('Sair').Add_Click({
-                $script:exiting = $true
-                $script:notifyIcon.Visible = $false
-                $form.Close()
-                [System.Windows.Forms.Application]::Exit()
-            })
-        $script:notifyIcon.ContextMenuStrip = $trayMenu
-        $script:notifyIcon.Add_DoubleClick({ 
-                $form.Show()
-                $form.WindowState = 'Normal'
-                $form.Activate()
-            })
     })
 
-# StatusStrip (rodapé)
+# StatusStrip (rodapé Moderno e Interativo)
 $statusStrip = New-Object System.Windows.Forms.StatusStrip
-$statusLabel = New-Object System.Windows.Forms.ToolStripStatusLabel
-$statusStrip.Items.Add($statusLabel) | Out-Null
+$statusStrip.BackColor = [System.Drawing.Color]::White
+$statusStrip.SizingGrip = $false
+
+# 1. Cliente (Esquerda, Spring)
+$statusLabelClient = New-Object System.Windows.Forms.ToolStripStatusLabel
+$statusLabelClient.Spring = $true
+$statusLabelClient.TextAlign = 'MiddleLeft'
+$statusLabelClient.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+$statusLabelClient.ForeColor = [System.Drawing.Color]::DarkSlateGray
+
+# 2. COD_HEM (Direita, Interativo)
+$statusLabelCod = New-Object System.Windows.Forms.ToolStripStatusLabel
+$statusLabelCod.BorderSides = 'Left'
+$statusLabelCod.BorderStyle = 'Flat'
+$statusLabelCod.IsLink = $true
+$statusLabelCod.LinkColor = [System.Drawing.Color]::DodgerBlue
+$statusLabelCod.ActiveLinkColor = [System.Drawing.Color]::Blue
+$statusLabelCod.ToolTipText = "Clique para alterar o COD_HEM"
+$statusLabelCod.Add_Click({ Show-CodHemDialog; Update-Status })
+
+# 3. Pasta SACS (Direita, Fixa)
+$statusLabelDir = New-Object System.Windows.Forms.ToolStripStatusLabel
+$statusLabelDir.Text = " SACS "
+$statusLabelDir.BorderSides = 'Left'
+$statusLabelDir.BorderStyle = 'Flat'
+$statusLabelDir.IsLink = $true
+$statusLabelDir.LinkColor = [System.Drawing.Color]::DimGray
+$statusLabelDir.ToolTipText = "Abrir pasta C:\SACS"
+$statusLabelDir.Add_Click({ if (Test-Path "C:\SACS") { Invoke-Item "C:\SACS" } })
+
+$statusStrip.Items.Add($statusLabelClient) | Out-Null
+$statusStrip.Items.Add($statusLabelCod) | Out-Null
+$statusStrip.Items.Add($statusLabelDir) | Out-Null
 $form.Controls.Add($statusStrip)
 
 # Painéis para Início e Sobre
 $painelInicio = New-Object System.Windows.Forms.Panel
 $painelInicio.Location = New-Object System.Drawing.Point(10, 30)
-$painelInicio.Size = New-Object System.Drawing.Size(390, 120)
+$painelInicio.Size = New-Object System.Drawing.Size(500, 130)
+$painelInicio.BackColor = [System.Drawing.Color]::White
 $form.Controls.Add($painelInicio)
 
-$painelSobre = New-Object System.Windows.Forms.Panel
-$painelSobre.Location = New-Object System.Drawing.Point(10, 30)
-$painelSobre.Size = New-Object System.Drawing.Size(390, 120)
-$painelSobre.Visible = $false
-$form.Controls.Add($painelSobre)
 
-# --- Painel Início ---
+
+# --- Painel Início (Modernizado) ---
 $comboBox = New-Object System.Windows.Forms.ComboBox
-$comboBox.Location = New-Object System.Drawing.Point(10, 10)
-$comboBox.Size = New-Object System.Drawing.Size(235, 25)
+$comboBox.Location = New-Object System.Drawing.Point(10, 15)
+$comboBox.Size = New-Object System.Drawing.Size(330, 28) 
 $comboBox.DropDownStyle = 'DropDownList'
+$comboBox.FlatStyle = 'System' # Usa renderização nativa (corrige fundo azul)
+$comboBox.Add_KeyPress({ $_.Handled = $true }) # Previne digitação no modo DropDown (Dark Mode Hack)
 $painelInicio.Controls.Add($comboBox)
 
 $button = New-Object System.Windows.Forms.Button
 $button.Text = 'Confirmar'
-$button.Location = New-Object System.Drawing.Point(250, 10)
-$button.Size = New-Object System.Drawing.Size(100, 25)
+$button.Location = New-Object System.Drawing.Point(350, 13)
+$button.Size = New-Object System.Drawing.Size(90, 30)
+$button.FlatStyle = 'Flat'
+$button.FlatAppearance.BorderSize = 0
+$button.BackColor = [System.Drawing.Color]::DodgerBlue # Azul Pro
+$button.ForeColor = [System.Drawing.Color]::White     # Texto Branco
+$button.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$button.Cursor = [System.Windows.Forms.Cursors]::Hand
 $painelInicio.Controls.Add($button)
 
 $btnPasta = New-Object System.Windows.Forms.Button
-$btnPasta.Location = New-Object System.Drawing.Point(355, 10)
-$btnPasta.Size = New-Object System.Drawing.Size(30, 25)
+$btnPasta.Location = New-Object System.Drawing.Point(450, 13)
+$btnPasta.Size = New-Object System.Drawing.Size(32, 30)
+$btnPasta.FlatStyle = 'Flat'
+$btnPasta.FlatAppearance.BorderSize = 0
+$btnPasta.BackColor = [System.Drawing.Color]::WhiteSmoke
+$btnPasta.Cursor = [System.Windows.Forms.Cursors]::Hand
 
-# --- Criar ícone de pasta dinamicamente ---
-$folderBmp = New-Object System.Drawing.Bitmap(16, 16)
+# --- Criar ícone de pasta dinamicamente (Melhorado) ---
+$folderBmp = New-Object System.Drawing.Bitmap(20, 20) # Aumentado levemente para 20x20
 $g = [System.Drawing.Graphics]::FromImage($folderBmp)
-$g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-$brushPasta = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 240, 180, 60)) # Cor amarela/laranja
-$penBorda = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(255, 180, 130, 40), 1)
+$g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias # Suavização
+$brushPasta = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 190, 0)) # Amarelo Ouro
+$penBorda = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(255, 200, 140, 0), 1.5)
 
-# Desenha aba e corpo da pasta
-$g.FillRectangle($brushPasta, 1, 1, 6, 4)   # Aba
-$g.DrawRectangle($penBorda, 1, 1, 6, 4)
-$g.FillRectangle($brushPasta, 1, 4, 13, 9)  # Corpo
-$g.DrawRectangle($penBorda, 1, 4, 13, 9)
+# Desenha aba e corpo da pasta (Coordenadas ajustadas)
+$g.FillRectangle($brushPasta, 2, 3, 7, 4)   # Aba
+$g.DrawRectangle($penBorda, 2, 3, 7, 4)
+$g.FillRectangle($brushPasta, 2, 6, 16, 11)  # Corpo
+$g.DrawRectangle($penBorda, 2, 6, 16, 11)
 $g.Dispose()
 
 $btnPasta.Image = $folderBmp
@@ -303,38 +365,44 @@ $btnPasta.Add_Click({
 $painelInicio.Controls.Add($btnPasta)
 
 $msgLabel = New-Object System.Windows.Forms.Label
-$msgLabel.Location = New-Object System.Drawing.Point(10, 45)
-$msgLabel.Size = New-Object System.Drawing.Size(350, 40)
-$msgLabel.ForeColor = [System.Drawing.Color]::DarkSlateBlue
+$msgLabel.Location = New-Object System.Drawing.Point(10, 55) # Levemente mais para baixo
+$msgLabel.Size = New-Object System.Drawing.Size(480, 40)
+$msgLabel.ForeColor = [System.Drawing.Color]::ForestGreen # Verde Sucesso
+$msgLabel.TextAlign = 'MiddleCenter' # Centralizado
+$msgLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
 $painelInicio.Controls.Add($msgLabel)
 
 # --- Painel Sobre ---
 $painelSobre = New-Object System.Windows.Forms.Panel
 $painelSobre.Location = New-Object System.Drawing.Point(10, 30)
-$painelSobre.Size = New-Object System.Drawing.Size(390, 120)
+$painelSobre.Size = New-Object System.Drawing.Size(500, 130)
 $painelSobre.Visible = $false
-$painelSobre.AutoScroll = $true   # habilita rolagem automática
+$painelSobre.AutoScroll = $true
+$painelSobre.BackColor = [System.Drawing.Color]::White
 $form.Controls.Add($painelSobre)
 
 $sobreLabel = New-Object System.Windows.Forms.Label
 $sobreLabel.Location = New-Object System.Drawing.Point(0, 0)
-$sobreLabel.AutoSize = $true      # deixa o label expandir conforme o texto
-$sobreLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$sobreLabel.AutoSize = $true
+$sobreLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9) # Mantém 9 no texto longo para caber, ou 10 se preferir
 $sobreLabel.Text = @"
-• Alteração rápida entre clientes;
-• Atualização dos atalhos com nome do cliente;
-• Permite alterar o COD_HEM a cada seleção de cliente;
-• Controle a opacidade e mantenha a janela sempre visível;
-• Permite inicialização automática junto com o Windows;
-• Ícone na bandeja para abrir/fechar sem encerrar o programa;
+Clientes Hemote Plus - v11
 
-Autor: Felipe Almeida
-Atualizado em: Dezembro de 2025
+• Troca Rápida: Alterne entre clientes com atualização automática de atalhos.
+• Segurança: Validação automática de duplicidade de conexões.
+• Produtividade: Edição rápida de COD_HEM e acesso à pasta SACS pelo rodapé.
+• Controle: Opacidade, janela 'Sempre Visível' e inicialização com Windows.
+• Performance: Sistema de cache para validação instantânea.
+
+Desenvolvido por: Felipe Almeida
+Última Atualização: Janeiro de 2026
 "@
 $painelSobre.Controls.Add($sobreLabel)
 
 # --- Barra de Menus ---
 $menuStrip = New-Object System.Windows.Forms.MenuStrip
+$menuStrip.BackColor = [System.Drawing.Color]::White # Harmonização do tema
+$menuStrip.RenderMode = 'System' # Tenta usar renderização nativa/flat se possível
 
 $menuInicio = New-Object System.Windows.Forms.ToolStripMenuItem
 $menuInicio.Text = 'Início'
@@ -414,10 +482,24 @@ $menuCodHemAtual.Text = 'COD_HEM atual'
 $menuCodHemAtual.CheckOnClick = $true
 $menuCodHemAtual.Add_Click({ Update-Status; Save-Config }) | Out-Null
 
-$menuLocalizacao = New-Object System.Windows.Forms.ToolStripMenuItem
-$menuLocalizacao.Text = 'Caminho da pasta Clientes'
-$menuLocalizacao.CheckOnClick = $true
-$menuLocalizacao.Add_Click({ Update-Status; Save-Config }) | Out-Null
+$menuBotaoSacs = New-Object System.Windows.Forms.ToolStripMenuItem
+$menuBotaoSacs.Text = 'Atalho Pasta SACS'
+$menuBotaoSacs.CheckOnClick = $true
+$menuBotaoSacs.Add_Click({ 
+        $statusLabelDir.Visible = $menuBotaoSacs.Checked
+        Save-Config 
+    }) | Out-Null
+    
+$menuModoEscuro = New-Object System.Windows.Forms.ToolStripMenuItem
+$menuModoEscuro.Text = 'Modo Escuro'
+$menuModoEscuro.CheckOnClick = $true
+$menuModoEscuro.Add_Click({ Apply-Theme; Save-Config }) | Out-Null
+$menuModoEscuro.Add_MouseHover({ 
+        $statusLabelClient.Text = "Alternar entre tema Claro e Escuro"
+        $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
+    })
+
+
 
 $menuSempreVisivel = New-Object System.Windows.Forms.ToolStripMenuItem
 $menuSempreVisivel.Text = 'Sempre Visível'
@@ -443,7 +525,8 @@ foreach ($valor in 20, 40, 60, 80, 100) {
 
 $menuExibicao.DropDownItems.Add($menuClienteAtual)  | Out-Null
 $menuExibicao.DropDownItems.Add($menuCodHemAtual)   | Out-Null
-$menuExibicao.DropDownItems.Add($menuLocalizacao)   | Out-Null
+$menuExibicao.DropDownItems.Add($menuBotaoSacs)     | Out-Null
+$menuExibicao.DropDownItems.Add($menuModoEscuro)    | Out-Null
 $menuExibicao.DropDownItems.Add($menuSempreVisivel) | Out-Null
 $menuExibicao.DropDownItems.Add($menuOpacidade)     | Out-Null
 # Eventos de MouseHover para mostrar dicas no rodapé
@@ -459,66 +542,124 @@ $restoreStatusTimer.Add_Tick({
 # Eventos de MouseHover para mostrar dicas no rodapé
 
 # Menus principais
+# Menus principais
 $menuInicio.Add_MouseHover({ 
-        $statusLabel.Text = "Voltar para a tela inicial de seleção de cliente"
+        $statusLabelClient.Text = "Voltar para a tela inicial de seleção de cliente"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $btnPasta.Add_MouseHover({
-        $statusLabel.Text = "Abrir pasta de atalhos (C:\SACS\atalhos\Hemote Plus Update)"
+        $statusLabelClient.Text = "Abrir pasta de atalhos (C:\SACS\atalhos\Hemote Plus Update)"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuConfig.Add_MouseHover({ 
-        $statusLabel.Text = "Configurações gerais do programa"
+        $statusLabelClient.Text = "Configurações gerais do programa"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuExibicao.Add_MouseHover({ 
-        $statusLabel.Text = "Opções de exibição da janela e informações"
+        $statusLabelClient.Text = "Opções de exibição da janela e informações"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuSobre.Add_MouseHover({ 
-        $statusLabel.Text = "Informações sobre o programa"
+        $statusLabelClient.Text = "Informações sobre o programa"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
 # Submenus de Configurações
 $menuClientes.Add_MouseHover({ 
-        $statusLabel.Text = "Define a pasta com os arquivos do cliente"
+        $statusLabelClient.Text = "Define a pasta com os arquivos do cliente"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuAlterarCodHem.Add_MouseHover({ 
-        $statusLabel.Text = "Permitir alterar o COD_HEM após selecionar o cliente"
+        $statusLabelClient.Text = "Permitir alterar o COD_HEM após selecionar o cliente"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuIniciarWindows.Add_MouseHover({ 
-        $statusLabel.Text = "Habilitar ou desabilitar inicialização automática com o Windows"
+        $statusLabelClient.Text = "Habilitar ou desabilitar inicialização automática com o Windows"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuValidarDuplicidade.Add_MouseHover({ 
-        $statusLabel.Text = "Verificar se existe duplicidade de data_access e webupdate."
+        $statusLabelClient.Text = "Verificar se existe duplicidade de data_access e webupdate."
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
 # Submenus de Exibição
 $menuClienteAtual.Add_MouseHover({ 
-        $statusLabel.Text = "Mostrar o cliente atual no rodapé"
+        $statusLabelClient.Text = "Mostrar o cliente atual no rodapé"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuCodHemAtual.Add_MouseHover({ 
-        $statusLabel.Text = "Mostrar o COD_HEM atual no rodapé"
+        $statusLabelClient.Text = "Mostrar o COD_HEM atual no rodapé"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
-$menuLocalizacao.Add_MouseHover({ 
-        $statusLabel.Text = "Mostrar o caminho da pasta de clientes no rodapé"
+
+$menuBotaoSacs.Add_MouseHover({ 
+        $statusLabelClient.Text = "Mostrar/Ocultar o botão de atalho para C:\SACS"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
+
+
+
 $menuSempreVisivel.Add_MouseHover({ 
-        $statusLabel.Text = "Manter a janela sempre visível sobre outras aplicações"
+        $statusLabelClient.Text = "Manter a janela sempre visível sobre outras aplicações"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuOpacidade.Add_MouseHover({ 
-        $statusLabel.Text = "Ajustar a opacidade da janela"
+        $statusLabelClient.Text = "Ajustar a opacidade da janela"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
+
+# --- Função de Tema (Dark Mode) ---
+function Apply-Theme {
+    if ($menuModoEscuro.Checked) {
+        $bg = [System.Drawing.Color]::FromArgb(45, 45, 48) # VS Code Dark
+        $panelBg = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        $fg = [System.Drawing.Color]::WhiteSmoke
+        $inputBg = [System.Drawing.Color]::FromArgb(60, 60, 60)
+        $btnPastaBg = [System.Drawing.Color]::FromArgb(80, 80, 80)
+    }
+    else {
+        $bg = [System.Drawing.Color]::White
+        $panelBg = [System.Drawing.Color]::White
+        $fg = [System.Drawing.Color]::Black
+        $inputBg = [System.Drawing.Color]::White
+        $btnPastaBg = [System.Drawing.Color]::WhiteSmoke
+    }
+
+    # Aplica Dark Mode na Barra de Título (Windows 10/11)
+    try { [Win32]::UseImmersiveDarkMode($form.Handle, $menuModoEscuro.Checked) | Out-Null } catch {}
+
+    $form.BackColor = $bg
+    $form.ForeColor = $fg
+    $painelInicio.BackColor = $panelBg
+    $painelSobre.BackColor = $panelBg
+    $menuStrip.BackColor = $panelBg
+    $menuStrip.ForeColor = $fg
+    $statusStrip.BackColor = $panelBg
+    $statusStrip.ForeColor = $fg
+    
+    $statusLabelClient.ForeColor = if ($menuModoEscuro.Checked) { [System.Drawing.Color]::LightGray } else { [System.Drawing.Color]::DarkSlateGray }
+    
+    # ComboBox
+    if ($menuModoEscuro.Checked) {
+        # Hack: Muda para DropDown (editável) para aceitar cores, mas bloqueamos digitação no KeyPress
+        $comboBox.DropDownStyle = 'DropDown' 
+        $comboBox.FlatStyle = 'Flat'
+        $comboBox.BackColor = [System.Drawing.Color]::FromArgb(60, 60, 60)
+        $comboBox.ForeColor = [System.Drawing.Color]::WhiteSmoke
+    }
+    else {
+        $comboBox.DropDownStyle = 'DropDownList'
+        $comboBox.FlatStyle = 'Standard'
+        $comboBox.BackColor = [System.Drawing.Color]::White
+        $comboBox.ForeColor = [System.Drawing.Color]::Black
+    }
+    
+    $btnPasta.BackColor = $btnPastaBg
+    $sobreLabel.ForeColor = $fg
+    
+    # Invalida para redesenhar bordas se necessário
+    $form.Refresh()
+}
 
 # --- Funções auxiliares ---
 function Save-Config {
@@ -537,11 +678,13 @@ function Save-Config {
     $obj = @{
         ClientesPath  = $global:clientesPath
         Exibicao      = @{
-            LocalizacaoClientes = $menuLocalizacao.Checked
-            SempreVisivel       = $menuSempreVisivel.Checked
-            Opacidade           = $opacidadeAtual
-            ClienteAtual        = $menuClienteAtual.Checked
-            CodHemAtual         = $menuCodHemAtual.Checked
+
+            SempreVisivel = $menuSempreVisivel.Checked
+            Opacidade     = $opacidadeAtual
+            ClienteAtual  = $menuClienteAtual.Checked
+            CodHemAtual   = $menuCodHemAtual.Checked
+            BotaoSacs     = $menuBotaoSacs.Checked
+            ModoEscuro    = $menuModoEscuro.Checked
         }
         Configuracoes = @{
             AlterarCodHem      = $menuAlterarCodHem.Checked
@@ -559,7 +702,7 @@ function Load-Config {
         $json = Get-Content $configFile | ConvertFrom-Json
         if ($json.ClientesPath) { $global:clientesPath = $json.ClientesPath }
 
-        $menuLocalizacao.Checked = $json.Exibicao.LocalizacaoClientes
+
         $menuSempreVisivel.Checked = $json.Exibicao.SempreVisivel
         $form.TopMost = $json.Exibicao.SempreVisivel
 
@@ -583,15 +726,28 @@ function Load-Config {
 
         $menuClienteAtual.Checked = $json.Exibicao.ClienteAtual
         $menuCodHemAtual.Checked = $json.Exibicao.CodHemAtual
+        
+        if ($json.Exibicao.PSObject.Properties.Match('BotaoSacs').Count) {
+            $menuBotaoSacs.Checked = $json.Exibicao.BotaoSacs
+        }
+        else {
+            $menuBotaoSacs.Checked = $true # Padrão ativado para novos
+        }
+        if ($json.Exibicao.PSObject.Properties.Match('ModoEscuro').Count) {
+            $menuModoEscuro.Checked = $json.Exibicao.ModoEscuro
+        }
+        $statusLabelDir.Visible = $menuBotaoSacs.Checked
 
         Load-Clientes
         Set-Startup $menuIniciarWindows.Checked
+        Apply-Theme
     }
     else {
         # Defaults para nova instalação/configuração ausente
-        $menuLocalizacao.Checked = $true
         $menuClienteAtual.Checked = $true
         $menuCodHemAtual.Checked = $true
+        $menuBotaoSacs.Checked = $true
+        $statusLabelDir.Visible = $true
         $menuValidarDuplicidade.Checked = $true
     }
     Update-Status
@@ -651,6 +807,49 @@ $form.Add_FormClosing({
         }
     }) | Out-Null
 
+# --- Evento Load (Carrega Ícones e Tray) ---
+$form.Add_Load({
+        # Tenta carregar ícone
+        $icon = $null
+        $iconPath = "C:\BASES HEMOTE\V11\hemote.ico"
+        if (Test-Path $iconPath) {
+            $icon = New-Object System.Drawing.Icon($iconPath)
+        }
+        else {
+            # Fallback para extrair do próprio EXE
+            try {
+                $exePath = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
+                $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
+            }
+            catch {
+                # Último fallback (ícone genérico)
+                $icon = [System.Drawing.SystemIcons]::Application
+            }
+        }
+    
+        # 1. Configura NotifyIcon (Tray)
+        $notifyIcon = New-Object System.Windows.Forms.NotifyIcon
+        $notifyIcon.Icon = $icon
+        $notifyIcon.Text = "Clientes Hemote Plus"
+        $notifyIcon.Visible = $true
+    
+        $trayMenu = New-Object System.Windows.Forms.ContextMenuStrip
+        
+        $trayItemAbrir = New-Object System.Windows.Forms.ToolStripMenuItem "Abrir"
+        $trayItemAbrir.Add_Click({ Show-Form })
+        [void]$trayMenu.Items.Add($trayItemAbrir)
+        
+        $trayItemSair = New-Object System.Windows.Forms.ToolStripMenuItem "Sair"
+        $trayItemSair.Add_Click({ $script:exiting = $true; $form.Close() })
+        [void]$trayMenu.Items.Add($trayItemSair)
+    
+        $notifyIcon.ContextMenuStrip = $trayMenu
+        $notifyIcon.Add_MouseDoubleClick({ Show-Form })
+
+        # 2. Configura Ícone da Janela
+        $form.Icon = $icon
+    }) | Out-Null
+
 # Carregar configuração inicial
 Load-Config
 Update-Status
@@ -660,6 +859,7 @@ Update-Status
 $button.Add_Click({
         $cliente = $comboBox.SelectedItem
         if (-not $cliente) { 
+            $msgLabel.ForeColor = [System.Drawing.Color]::Red
             $msgLabel.Text = 'Selecione um cliente.' 
             $clearMsgTimer.Stop(); $clearMsgTimer.Start()
             return 
@@ -674,16 +874,17 @@ $button.Add_Click({
                     if ($_.Key -ne $cliente) {
                         $dadosOutro = $_.Value
                         if ($dadosAtual.CodHem -ne "" -and $dadosAtual.CodHem -eq $dadosOutro.CodHem) {
-                            $duplicados += "$($_.Key) (mesmo ws_url)"
+                            $duplicados += "$($_.Key) (data_access)"
                         }
                         elseif ($dadosAtual.Url -ne "" -and $dadosAtual.Url -eq $dadosOutro.Url) {
-                            $duplicados += "$($_.Key) (mesma URL)"
+                            $duplicados += "$($_.Key) (WebUpdate)"
                         }
                     }
                 }
 
                 if ($duplicados.Count -gt 0) {
-                    $msgLabel.Text = "Duplicidade detectada com: " + ($duplicados -join ', ')
+                    $msgLabel.ForeColor = [System.Drawing.Color]::Firebrick
+                    $msgLabel.Text = "Conflito: " + ($duplicados -join ', ')
                     return
                 }
             }
@@ -772,6 +973,7 @@ $button.Add_Click({
         }
 
         Update-Status
+        $msgLabel.ForeColor = [System.Drawing.Color]::ForestGreen
         $msgLabel.Text = "Cliente $cliente definido com sucesso!"
         $clearMsgTimer.Stop(); $clearMsgTimer.Start()
     }) | Out-Null
