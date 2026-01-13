@@ -6,25 +6,21 @@ Add-Type -AssemblyName System.Drawing
 $code = @"
 using System;
 using System.Runtime.InteropServices;
-public class Win32 {
+public class DarkModeHelper {
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
-    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
 
-    public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled) {
-        if (IsWindows10OrGreater(17763)) {
-            int attribute = DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
-            if (IsWindows10OrGreater(18985)) {
-                attribute = DWMWA_USE_IMMERSIVE_DARK_MODE;
-            }
-            int useImmersiveDarkMode = enabled ? 1 : 0;
-            return DwmSetWindowAttribute(handle, attribute, ref useImmersiveDarkMode, sizeof(int)) == 0;
+    public static void SetDarkMode(IntPtr handle, bool enabled) {
+        int useDarkMode = enabled ? 1 : 0;
+        // Tenta primeiro o atributo moderno (Windows 11 e Windows 10 20H1+)
+        int result = DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, 4);
+        
+        // Se falhar (retorno != 0), tenta o atributo legado (versões antigas do Windows 10)
+        if (result != 0) {
+            DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref useDarkMode, 4);
         }
-        return false;
-    }
-    private static bool IsWindows10OrGreater(int build = -1) {
-        return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
     }
 }
 "@
@@ -253,9 +249,9 @@ $form.Add_Load({
         $y = $wa.Y + $wa.Height - $form.Height
         $form.Location = New-Object System.Drawing.Point($x, $y)
         
-        # Garante que o Dark Mode seja aplicado assim que a janela for criada (Handle existe)
+        # Garante que o Dark Mode seja aplicado assim que a janela for criada
         $form.Add_HandleCreated({
-                try { [Win32]::UseImmersiveDarkMode($form.Handle, $menuModoEscuro.Checked) | Out-Null } catch {}
+                try { [DarkModeHelper]::SetDarkMode($form.Handle, $menuModoEscuro.Checked) } catch {}
             })
 
     })
@@ -626,7 +622,8 @@ function Apply-Theme {
     }
 
     # Aplica Dark Mode na Barra de Título (Windows 10/11)
-    try { [Win32]::UseImmersiveDarkMode($form.Handle, $menuModoEscuro.Checked) | Out-Null } catch {}
+    # Aplica Dark Mode na Barra de Título (Windows 10/11)
+    try { [DarkModeHelper]::SetDarkMode($form.Handle, $menuModoEscuro.Checked) } catch {}
 
     $form.BackColor = $bg
     $form.ForeColor = $fg
