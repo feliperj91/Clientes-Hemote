@@ -1,91 +1,86 @@
 # Clientes Hemote Plus - v11 🩸
 
-**Ferramenta de produtividade para gerenciamento de ambientes Hemote.**
+**Ferramenta para ajudar no dia a dia com os ambientes Hemote.**
 
-O **Clientes Hemote Plus** é um utilitário desenvolvido para agilizar a rotina de quem precisa alternar frequentemente entre configurações de diferentes clientes. Com foco em produtividade, ele automatiza a cópia de arquivos de configuração e gerencia atalhos, tudo através de uma interface discreta que reside na bandeja do sistema.
-
----
-
-## 🚀 Novidades da Versão (Atualizado)
-
-1.  **👁️ Monitoramento em Tempo Real:** 
-    *   Não é mais necessário reiniciar o programa ao adicionar novos clientes! O sistema detecta automaticamente se você criar, renomear ou excluir pastas em `C:\SACS\CLIENTES` e atualiza a lista na hora.
-2.  **🛡️ Validação de Integridade:** 
-    *   Antes de trocar o cliente, o sistema verifica se os arquivos críticos (`_data_access.ini` e `WebUpdate.ini`) realmente existem na pasta de origem. Se estiverem faltando, ele avisa e impede a troca, prevenindo configurações quebradas.
-3.  **🎨 Modo Escuro Aprimorado:** 
-    *   Visual "Solid Dark" sem bordas brancas irritantes nos menus.
-    *   Destaques em cinza escuro para maior conforto visual.
-4.  **🖱️ Controle de Bandeja Inteligente:** 
-    *   **Duplo clique** no ícone da bandeja para **Mostrar** a janela.
-    *   **Duplo clique** novamente para **Minimizar** de volta para a bandeja.
-    *   O programa fica totalmente oculto da barra de tarefas ("Stealth Mode").
-5.  **🔄 Botão de Atualização Manual:**
-    *   Caso precise forçar uma atualização, um botão "Refresh" (↻) foi adicionado ao lado da lista de clientes.
+O **Clientes Hemote Plus** serve para facilitar a vida de quem precisa trocar a configuração de clientes toda hora. Ele copia os arquivos sozinho e arruma os atalhos, ficando quietinho na bandeja do sistema sem atrapalhar.
 
 ---
 
-## 📋 Pré-requisitos do Sistema
+## 🚀 O que tem de novo?
 
-Para o funcionamento correto, assegure-se de que sua máquina possui:
-1.  **Sistema Operacional:** Windows 10 ou Windows 11.
-2.  **Estrutura de Pastas Obrigatória:**
-    *   `C:\SACS` (Raiz do sistema)
-    *   `C:\SACS\CLIENTES` (Onde ficam as subpastas de cada cliente)
-    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update` (Para a funcionalidade automática de renomear atalhos).
+1.  **🔄 Botão de Atualizar:** 
+    *   Agora tem um botãozinho de "Recarregar" (aquele ↻) ao lado da lista. Se você colocar uma pasta nova de cliente, é só clicar nele que aparece na lista na hora.
+2.  **🛡️ Proteção contra Erros:** 
+    *   Antes de trocar, o programa confere se os arquivos importantes (`_data_access.ini` e `WebUpdate.ini`) estão mesmo na pasta. Se não estiverem, ele avisa e não deixa trocar, para não quebrar nada.
+3.  **🎨 Modo Escuro Melhorado:** 
+    *   Ficou mais bonito e confortável para os olhos, tudo escuro de verdade.
+4.  **🖱️ Controle "Escondido":** 
+    *   **Duplo clique** no ícone perto do relógio para **Mostrar** a janela.
+    *   **Duplo clique** de novo para **Esconder**.
+    *   O programa não fica ocupando espaço na barra de tarefas.
+5.  **✨ Atalhos Inteligentes:**
+    *   Ele renomeia os atalhos da pasta `Hemote Plus Update` automaticamente para você saber em qual cliente está.
 
 ---
 
-## 🛠️ Passo a Passo: Como Utilizar
+## 📋 O que precisa para usar
 
-Siga este guia para configurar e operar o sistema corretamente.
+1.  **Windows 10 ou Windows 11.**
+2.  **Pastas no lugar certo:**
+    *   `C:\SACS` (Onde fica o sistema)
+    *   `C:\SACS\CLIENTES` (Onde você guarda as pastas dos clientes)
+    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update` (Se quiser que ele renomeie os atalhos).
 
-### 1️⃣ Instalação e Primeira Execução
-1.  Baixe e coloque o arquivo `Clientes Hemote.exe` em um local seguro (ex: `C:\SACS` ou sua Área de Trabalho).
-2.  Execute o arquivo.
-    *   ⚠ **Atenção:** O programa **NÃO** aparecerá na barra horizontal inferior do Windows. Procure pelo ícone de uma **Gota de Sangue 🩸** perto do relógio (Bandeja do Sistema).
-3.  Dê um duplo clique no ícone da gota para abrir a janela principal.
+---
 
-### 2️⃣ Configurando a Pasta de Clientes
-Antes de usar, você precisa dizer ao programa onde os dados dos clientes estão salvos:
-1.  Na janela do programa, clique no menu superior **Configurações**.
+## 🛠️ Passo a Passo
+
+### 1️⃣ Primeiro Uso
+1.  Baixe o `Clientes Hemote.exe`.
+2.  Abra o arquivo.
+    *   ⚠ **Dica:** Ele não aparece na barra embaixo. Procure o ícone da **Gota de Sangue 🩸** perto do relógio do Windows.
+3.  Dê dois cliques na gotinha para abrir.
+
+### 2️⃣ Configurando a Pasta
+Antes de começar, mostre onde estão os clientes:
+1.  No menu lá em cima, clique em **Configurações**.
 2.  Clique em **Clientes**.
-3.  Uma janela de seleção de pasta abrirá. Navegue e selecione a pasta que contém as subpastas dos clientes (Geralmente `C:\SACS\CLIENTES`).
-4.  O sistema irá carregar a lista automaticamente.
+3.  Escolha a pasta onde estão as subpastas dos clientes (Normalmente `C:\SACS\CLIENTES`).
+4.  Pronto, a lista vai aparecer.
 
-### 3️⃣ Trocando de Cliente (Uso Diário)
-1.  Abra o programa (duplo clique no ícone da bandeja ou use o botão ↻ se adicionou arquivos recentemente).
-2.  Na lista (ComboBox), selecione o nome do cliente.
-3.  Clique no botão azul **Confirmar**.
-    *   O sistema verifica se os arquivos existem.
-    *   Se houver duplicidade de `COD_HEM` ou `URL` com outro cliente, ele avisa.
-    *   Se tudo estiver ok, ele copia os arquivos e renomeia o atalho em `Hemote Plus Update`.
-    *   Uma mensagem verde confirmará o sucesso.
-4.  Dê um duplo clique no ícone da bandeja para esconder a janela novamente.
+### 3️⃣ Como Trocar de Cliente
+1.  Abra o programa (dois cliques na gotinha).
+2.  Se escolheu um cliente novo e ele não apareceu, clique no botão ↻.
+3.  Escolha o cliente na lista.
+4.  Clique no botão azul **Confirmar**.
+    *   Se der tudo certo, vai aparecer uma mensagem verde.
+    *   Se tiver algum problema (arquivos faltando ou iguais a outro cliente), ele vai te avisar.
+5.  Dê dois cliques na gotinha para esconder a janela de novo.
 
-### 4️⃣ Configurando Opções de Exibição
-No menu **Exibição**, personalize sua experiência:
-*   **Modo Escuro:** Alterna para o novo tema escuro refinado.
-*   **Sempre Visível:** Mantém a janelinha flutuando acima de tudo.
-*   **Opacidade:** Deixa a janela transparente ("Fantasma").
-*   **Botão SACS:** Adiciona um atalho rápido no rodapé para abrir a pasta `C:\SACS`.
+### 4️⃣ Opções Visuais
+No menu **Exibição**:
+*   **Modo Escuro:** Troca para o tema escuro.
+*   **Sempre Visível:** A janela fica por cima de tudo.
+*   **Opacidade:** Deixa a janela meio transparente.
+*   **Botão SACS:** Coloca um atalho rápido para abrir a pasta `C:\SACS`.
 
-### 5️⃣ Como Fechar o Programa Definitivamente
-Como o botão "X" apenas minimiza o programa para a bandeja (para não fechar por acidente):
-1.  Clique com o **botão direito** no ícone da Gota de Sangue 🩸 perto do relógio.
-2.  Selecione a opção **Sair**.
+### 5️⃣ Como Fechar de Vez
+Para fechar totalmente o programa:
+1.  Clique com o **botão direito** na Gota de Sangue 🩸.
+2.  Clique em **Sair**.
 
 ---
 
-## ❓ Resolução de Problemas Comuns
+## ❓ Dúvidas Comuns
 
-**"Não encontro o ícone do programa!"**
-> O Windows costuma esconder ícones pouco usados. Clique na setinha `^` na barra de tarefas (canto inferior direito) e arraste o ícone da gota para fora.
+**"Cadê o ícone?"**
+> O Windows gosta de esconder. Clique na setinha `^` perto do relógio e arraste a gotinha para fora.
 
-**"Erro: Arquivos de configuração ausentes"**
-> Isso significa que a pasta do cliente que você selecionou está vazia ou faltando o `_data_access.ini` ou `WebUpdate.ini`. Verifique a pasta em `C:\SACS\CLIENTES`.
+**"Deu erro de arquivos ausentes"**
+> A pasta desse cliente deve estar vazia ou faltando arquivos. Dá uma olhada lá em `C:\SACS\CLIENTES`.
 
-**"Erro: Conflito de data_access e WebUpdate"**
-> O programa detectou que o cliente selecionado tem exatamente as mesmas configurações de outro cliente já existente. Ele mostrará qual arquivo está conflitando para você corrigir.
+**"Deu erro de conflito"**
+> Esse cliente é igualzinho a outro que você já tem (mesmo código ou link). O programa avisa para evitar confusão.
 
 ---
 

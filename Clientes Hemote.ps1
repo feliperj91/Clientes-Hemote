@@ -121,8 +121,7 @@ function Load-Clientes {
         $statusLabelClient.Text = "Pronto."
     }
     
-    # Configura/Atualiza o watcher sempre que carregar (garante path correto)
-    Setup-Watcher
+    $statusLabelClient.Text = "Pronto."
 }
 
 
@@ -309,39 +308,7 @@ function Update-Shortcuts($pathAtalhos, $novoCliente) {
     }
 }
 
-# --- Monitoramento de Pasta (Auto-Refresh) ---
-$script:fileWatcher = $null
 
-function Setup-Watcher {
-    # Limpeza prévia robusta
-    Get-EventSubscriber | Where-Object { $_.SourceIdentifier -like "FileWatcher_Clientes_*" } | Unregister-Event -Force -ErrorAction SilentlyContinue
-    
-    if ($script:fileWatcher) {
-        $script:fileWatcher.Dispose()
-        $script:fileWatcher = $null
-    }
-
-    if (Test-Path $global:clientesPath) {
-        $script:fileWatcher = New-Object System.IO.FileSystemWatcher
-        $script:fileWatcher.Path = $global:clientesPath
-        $script:fileWatcher.NotifyFilter = [System.IO.NotifyFilters]::DirectoryName -bor [System.IO.NotifyFilters]::FileName
-        $script:fileWatcher.IncludeSubdirectories = $true
-        $script:fileWatcher.EnableRaisingEvents = $true
-
-        $action = {
-            # Invoca na thread da UI para evitar erro
-            $form.Invoke({ 
-                    Load-Clientes
-                    Update-Status
-                })
-        }
-
-        # Eventos que disparam o refresh com IDs ÚNICOS
-        Register-ObjectEvent -InputObject $script:fileWatcher -EventName "Created" -SourceIdentifier "FileWatcher_Clientes_Created" -Action $action | Out-Null
-        Register-ObjectEvent -InputObject $script:fileWatcher -EventName "Deleted" -SourceIdentifier "FileWatcher_Clientes_Deleted" -Action $action | Out-Null
-        Register-ObjectEvent -InputObject $script:fileWatcher -EventName "Renamed" -SourceIdentifier "FileWatcher_Clientes_Renamed" -Action $action | Out-Null
-    }
-}
 
 # Form principal
 $form = New-Object System.Windows.Forms.Form
@@ -509,14 +476,13 @@ $sobreLabel = New-Object System.Windows.Forms.Label
 $sobreLabel.Location = New-Object System.Drawing.Point(0, 0)
 $sobreLabel.AutoSize = $true
 $sobreLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9) # Mantém 9 no texto longo para caber, ou 10 se preferir
-$sobreLabel.Text = @"
 Clientes Hemote Plus - v11
 
-• Troca Rápida: Alterne entre clientes com atualização automática de atalhos.
-• Segurança: Validação automática de duplicidade de conexões.
-• Produtividade: Edição rápida de COD_HEM e acesso à pasta SACS pelo rodapé.
-• Controle: Opacidade, janela 'Sempre Visível' e inicialização com Windows.
-• Performance: Sistema de cache para validação instantânea.
+• Troca Rápida: Alterne entre clientes com atualização dos atalhos.
+• Botão Atualizar: Recarregue a lista de clientes manualmente se adicionar novas pastas.
+• Segurança: O sistema avisa se houver duplicidade de configurações.
+• Produtividade: Edição rápida de COD_HEM e acesso à pasta SACS.
+• Controle: Opacidade, 'Sempre Visível' e modo discreto na bandeja.
 
 Desenvolvido por: Felipe Almeida
 Última Atualização: Janeiro de 2026
@@ -1139,11 +1105,5 @@ try {
     [System.Windows.Forms.Application]::Run($form)
 }
 finally {
-    # Limpeza
-    Get-EventSubscriber | Where-Object { $_.SourceIdentifier -like "FileWatcher_Clientes_*" } | Unregister-Event -Force -ErrorAction SilentlyContinue
-    
-    if ($script:fileWatcher) {
-        $script:fileWatcher.Dispose()
-    }
     try { $mutex.ReleaseMutex() } catch {}
 }
