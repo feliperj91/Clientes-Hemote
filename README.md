@@ -52,8 +52,6 @@ Configure o diretório fonte dos clientes:
 3.  Selecione o cliente desejado na lista suspensa.
 4.  **Atalhos Rápidos:** O ícone de **Pasta Amarela** ao lado do botão Confirmar abre diretamente o diretório de atalhos (`C:\SACS\atalhos\Hemote Plus Update`) para verificação rápida.
 5.  Clique em **Confirmar**.
-    *   O sistema validará os arquivos e indicará sucesso ou falha (ex: arquivos ausentes ou duplicidade de parâmetros).
-6.  A janela pode ser minimizada novamente para a bandeja com duplo clique no ícone ou botão de fechar.
 
 ### 4. Gestão de COD_HEM
 O sistema oferece duas formas de manipular o parâmetro `COD_HEM` no arquivo `_data_access.ini`:

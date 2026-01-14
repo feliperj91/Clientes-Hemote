@@ -258,13 +258,11 @@ function Update-Status {
     $statusLabelClient.Text = $textoEsq
 
     # Atualiza CodHem
+    $statusLabelCod.Visible = $menuCodHemAtual.Checked
     if ($menuCodHemAtual.Checked) {
         $valCod = Get-CodHemAtual
         if (-not $valCod) { $valCod = "---" }
         $statusLabelCod.Text = " COD: $valCod "
-    }
-    else {
-        $statusLabelCod.Text = ""
     }
 }
 
@@ -349,20 +347,21 @@ $statusLabelClient.ForeColor = [System.Drawing.Color]::DarkSlateGray
 
 # 2. COD_HEM (Direita, Interativo)
 $statusLabelCod = New-Object System.Windows.Forms.ToolStripStatusLabel
-$statusLabelCod.BorderSides = 'Left'
-$statusLabelCod.BorderStyle = 'Flat'
+$statusLabelCod.BorderSides = 'None'
 $statusLabelCod.IsLink = $true
+$statusLabelCod.LinkBehavior = [System.Windows.Forms.LinkBehavior]::NeverUnderline
 $statusLabelCod.LinkColor = [System.Drawing.Color]::DodgerBlue
-$statusLabelCod.ActiveLinkColor = [System.Drawing.Color]::Blue
+$statusLabelCod.ActiveLinkColor = [System.Drawing.Color]::RoyalBlue
 $statusLabelCod.ToolTipText = "Clique para alterar o COD_HEM"
 $statusLabelCod.Add_Click({ Show-CodHemDialog; Update-Status })
 
 # 3. Pasta SACS (Direita, Fixa)
 $statusLabelDir = New-Object System.Windows.Forms.ToolStripStatusLabel
-$statusLabelDir.Text = " SACS "
-$statusLabelDir.BorderSides = 'Left'
-$statusLabelDir.BorderStyle = 'Flat'
+$statusLabelDir.Text = " 📂 SACS "
+$statusLabelDir.BorderSides = 'None'
+$statusLabelDir.Margin = New-Object System.Windows.Forms.Padding(15, 0, 0, 0)
 $statusLabelDir.IsLink = $true
+$statusLabelDir.LinkBehavior = [System.Windows.Forms.LinkBehavior]::NeverUnderline
 $statusLabelDir.LinkColor = [System.Drawing.Color]::DimGray
 $statusLabelDir.ToolTipText = "Abrir pasta C:\SACS"
 $statusLabelDir.Add_Click({ if (Test-Path "C:\SACS") { Invoke-Item "C:\SACS" } })
@@ -737,6 +736,16 @@ function Apply-Theme {
     $statusStrip.ForeColor = $fg
     
     $statusLabelClient.ForeColor = if ($menuModoEscuro.Checked) { [System.Drawing.Color]::LightGray } else { [System.Drawing.Color]::DarkSlateGray }
+    
+    # Atualiza cores dos links do rodapé (Adaptação ao Tema)
+    if ($menuModoEscuro.Checked) {
+        $statusLabelCod.LinkColor = [System.Drawing.Color]::LightSkyBlue
+        $statusLabelDir.LinkColor = [System.Drawing.Color]::Silver
+    }
+    else {
+        $statusLabelCod.LinkColor = [System.Drawing.Color]::DodgerBlue
+        $statusLabelDir.LinkColor = [System.Drawing.Color]::DimGray
+    }
     
     # ComboBox
     if ($menuModoEscuro.Checked) {
