@@ -28,7 +28,7 @@ O **Clientes Hemote Plus** automatiza a substituição de arquivos de configura�
 2.  **Estrutura de Diretórios:**
     *   `C:\SACS`: Diretório raiz do sistema.
     *   `C:\SACS\CLIENTES`: Repositório das pastas de configuração de cada cliente.
-    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update`: Diretório alvo para renomeação dinâmica de atalhos.
+    *   `C:\SACS\atalhos\Hemote Plus Update`: Diretório alvo para renomeação dinâmica de atalhos.
 
 ---
 
