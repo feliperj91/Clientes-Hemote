@@ -476,6 +476,7 @@ $sobreLabel = New-Object System.Windows.Forms.Label
 $sobreLabel.Location = New-Object System.Drawing.Point(0, 0)
 $sobreLabel.AutoSize = $true
 $sobreLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9) # Mantém 9 no texto longo para caber, ou 10 se preferir
+$sobreLabel.Text = @"
 Clientes Hemote Plus - v11
 
 • Troca Rápida: Alterne entre clientes com atualização dos atalhos.
@@ -528,7 +529,7 @@ $menuClientes = New-Object System.Windows.Forms.ToolStripMenuItem
 $menuClientes.Text = 'Clientes'
 $menuClientes.Add_Click({
         $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-        $dialog.Description = "Selecione a pasta CLIENTES"
+        $dialog.Description = 'Selecione a pasta CLIENTES'
         $dialog.SelectedPath = $global:clientesPath
         if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
             $global:clientesPath = $dialog.SelectedPath
@@ -585,7 +586,7 @@ $menuModoEscuro.Text = 'Modo Escuro'
 $menuModoEscuro.CheckOnClick = $true
 $menuModoEscuro.Add_Click({ Apply-Theme; Save-Config }) | Out-Null
 $menuModoEscuro.Add_MouseHover({ 
-        $statusLabelClient.Text = "Alternar entre tema Claro e Escuro"
+        $statusLabelClient.Text = 'Alternar entre tema Claro e Escuro'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
@@ -600,7 +601,7 @@ $menuOpacidade = New-Object System.Windows.Forms.ToolStripMenuItem
 $menuOpacidade.Text = 'Opacidade'
 foreach ($valor in 20, 40, 60, 80, 100) {
     $item = New-Object System.Windows.Forms.ToolStripMenuItem
-    $item.Text = "$valor%"
+    $item.Text = $valor.ToString() + '%'
     $item.Tag = $valor
     $item.CheckOnClick = $true
     $item.Add_Click({
@@ -634,71 +635,71 @@ $restoreStatusTimer.Add_Tick({
 # Menus principais
 # Menus principais
 $btnRefresh.Add_MouseHover({ 
-        $statusLabelClient.Text = "Atualizar lista de clientes"
+        $statusLabelClient.Text = 'Atualizar lista de clientes'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuInicio.Add_MouseHover({ 
-        $statusLabelClient.Text = "Voltar para a tela inicial de seleção de cliente"
+        $statusLabelClient.Text = 'Voltar para a tela inicial de seleção de cliente'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $btnPasta.Add_MouseHover({
-        $statusLabelClient.Text = "Abrir pasta de atalhos (C:\SACS\atalhos\Hemote Plus Update)"
+        $statusLabelClient.Text = 'Abrir pasta de atalhos (C:\SACS\atalhos\Hemote Plus Update)'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuConfig.Add_MouseHover({ 
-        $statusLabelClient.Text = "Configurações gerais do programa"
+        $statusLabelClient.Text = 'Configurações gerais do programa'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuExibicao.Add_MouseHover({ 
-        $statusLabelClient.Text = "Opções de exibição da janela e informações"
+        $statusLabelClient.Text = 'Opções de exibição da janela e informações'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuSobre.Add_MouseHover({ 
-        $statusLabelClient.Text = "Informações sobre o programa"
+        $statusLabelClient.Text = 'Informações sobre o programa'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
 # Submenus de Configurações
 $menuClientes.Add_MouseHover({ 
-        $statusLabelClient.Text = "Define a pasta com os arquivos do cliente"
+        $statusLabelClient.Text = 'Define a pasta com os arquivos do cliente'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuAlterarCodHem.Add_MouseHover({ 
-        $statusLabelClient.Text = "Permitir alterar o COD_HEM após selecionar o cliente"
+        $statusLabelClient.Text = 'Permitir alterar o COD_HEM após selecionar o cliente'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuIniciarWindows.Add_MouseHover({ 
-        $statusLabelClient.Text = "Habilitar ou desabilitar inicialização automática com o Windows"
+        $statusLabelClient.Text = 'Habilitar ou desabilitar inicialização automática com o Windows'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuValidarDuplicidade.Add_MouseHover({ 
-        $statusLabelClient.Text = "Verificar se existe duplicidade de data_access e webupdate."
+        $statusLabelClient.Text = 'Verificar se existe duplicidade de data_access e webupdate.'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
 # Submenus de Exibição
 $menuClienteAtual.Add_MouseHover({ 
-        $statusLabelClient.Text = "Mostrar o cliente atual no rodapé"
+        $statusLabelClient.Text = 'Mostrar o cliente atual no rodapé'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuCodHemAtual.Add_MouseHover({ 
-        $statusLabelClient.Text = "Mostrar o COD_HEM atual no rodapé"
+        $statusLabelClient.Text = 'Mostrar o COD_HEM atual no rodapé'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
 $menuBotaoSacs.Add_MouseHover({ 
-        $statusLabelClient.Text = "Mostrar/Ocultar o botão de atalho para C:\SACS"
+        $statusLabelClient.Text = 'Mostrar/Ocultar o botão de atalho para C:\SACS'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
 
 
 $menuSempreVisivel.Add_MouseHover({ 
-        $statusLabelClient.Text = "Manter a janela sempre visível sobre outras aplicações"
+        $statusLabelClient.Text = 'Manter a janela sempre visível sobre outras aplicações'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 $menuOpacidade.Add_MouseHover({ 
-        $statusLabelClient.Text = "Ajustar a opacidade da janela"
+        $statusLabelClient.Text = 'Ajustar a opacidade da janela'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
 
@@ -937,7 +938,7 @@ $form.Add_FormClosing({
 $form.Add_Load({
         # Tenta carregar ícone
         $icon = $null
-        $iconPath = "C:\BASES HEMOTE\V11\hemote.ico"
+        $iconPath = 'C:\BASES HEMOTE\V11\hemote.ico'
         if (Test-Path $iconPath) {
             $icon = New-Object System.Drawing.Icon($iconPath)
         }
@@ -956,16 +957,16 @@ $form.Add_Load({
         # 1. Configura NotifyIcon (Tray)
         $notifyIcon = New-Object System.Windows.Forms.NotifyIcon
         $notifyIcon.Icon = $icon
-        $notifyIcon.Text = "Clientes Hemote Plus"
+        $notifyIcon.Text = 'Clientes Hemote Plus'
         $notifyIcon.Visible = $true
     
         $trayMenu = New-Object System.Windows.Forms.ContextMenuStrip
         
-        $trayItemAbrir = New-Object System.Windows.Forms.ToolStripMenuItem "Abrir"
+        $trayItemAbrir = New-Object System.Windows.Forms.ToolStripMenuItem 'Abrir'
         $trayItemAbrir.Add_Click({ Show-Form })
         [void]$trayMenu.Items.Add($trayItemAbrir)
         
-        $trayItemSair = New-Object System.Windows.Forms.ToolStripMenuItem "Sair"
+        $trayItemSair = New-Object System.Windows.Forms.ToolStripMenuItem 'Sair'
         $trayItemSair.Add_Click({ $script:exiting = $true; $form.Close() })
         [void]$trayMenu.Items.Add($trayItemSair)
     
@@ -1001,22 +1002,22 @@ $button.Add_Click({
                         $dadosOutro = $_.Value
                         $conflitos = @()
                         
-                        if ($dadosAtual.CodHem -ne "" -and $dadosAtual.CodHem -eq $dadosOutro.CodHem) {
-                            $conflitos += "data_access"
+                        if ($dadosAtual.CodHem -ne '' -and $dadosAtual.CodHem -eq $dadosOutro.CodHem) {
+                            $conflitos += 'data_access'
                         }
-                        if ($dadosAtual.Url -ne "" -and $dadosAtual.Url -eq $dadosOutro.Url) {
-                            $conflitos += "WebUpdate"
+                        if ($dadosAtual.Url -ne '' -and $dadosAtual.Url -eq $dadosOutro.Url) {
+                            $conflitos += 'WebUpdate'
                         }
                         
                         if ($conflitos.Count -gt 0) {
-                            $duplicados += "$($_.Key) ($($conflitos -join ' e '))"
+                            $duplicados += $_.Key + ' (' + ($conflitos -join ' e ') + ')'
                         }
                     }
                 }
 
                 if ($duplicados.Count -gt 0) {
                     $msgLabel.ForeColor = [System.Drawing.Color]::Firebrick
-                    $msgLabel.Text = "Conflito: " + ($duplicados -join ', ')
+                    $msgLabel.Text = 'Conflito: ' + ($duplicados -join ', ')
                     return
                 }
             }
@@ -1034,12 +1035,12 @@ $button.Add_Click({
 
             # Validação Rígida: Verifica se os arquivos REALMENTE existem antes de prosseguir
             # (Corrige o problema de alterar para uma pasta que foi esvaziada recentemente)
-            $testeIni = Join-Path $origemCliente "_data_access.ini"
-            $testeWeb = Join-Path $origemCliente "WebUpdate.ini"
+            $testeIni = Join-Path $origemCliente '_data_access.ini'
+            $testeWeb = Join-Path $origemCliente 'WebUpdate.ini'
             
             if (-not (Test-Path $testeIni) -or -not (Test-Path $testeWeb)) {
                 $msgLabel.ForeColor = [System.Drawing.Color]::Blue
-                $msgLabel.Text = "Erro: Arquivos de configuração ausentes na pasta!"
+                $msgLabel.Text = 'Erro: Arquivos de configuração ausentes na pasta!'
                 $clearMsgTimer.Stop(); $clearMsgTimer.Start()
                  
                 # Opcional: Força recarregar a lista já que encontramos uma inconsistência
@@ -1048,24 +1049,24 @@ $button.Add_Click({
             }
 
             # Arquivos para C:\SACS
-            foreach ($arquivo in @("_data_access.ini", "logo.jpg", "logo2.jpg")) {
+            foreach ($arquivo in @('_data_access.ini', 'logo.jpg', 'logo2.jpg')) {
                 $origem = Join-Path $origemCliente $arquivo
                 if (Test-Path $origem) {
-                    Copy-Item -Path $origem -Destination "C:\SACS\" -Force -ErrorAction Stop
+                    Copy-Item -Path $origem -Destination 'C:\SACS\' -Force -ErrorAction Stop
                 }
             }
 
             # Arquivo WebUpdate.ini
-            $origemWeb = Join-Path $origemCliente "WebUpdate.ini"
+            $origemWeb = Join-Path $origemCliente 'WebUpdate.ini'
             if (Test-Path $origemWeb) {
-                $destBoot = "C:\SACS\BootStrap"
+                $destBoot = 'C:\SACS\BootStrap'
                 if (-not (Test-Path $destBoot)) { New-Item -ItemType Directory -Path $destBoot | Out-Null }
                 Copy-Item -Path $origemWeb -Destination $destBoot -Force -ErrorAction Stop
             }
         
         }
         catch {
-            $msgLabel.Text = "Erro na cópia: $($_.Exception.Message)"
+            $msgLabel.Text = 'Erro na cópia: ' + $_.Exception.Message
             return
         }
 
@@ -1084,11 +1085,11 @@ $button.Add_Click({
         $config | ConvertTo-Json | Set-Content $configFile -Encoding UTF8
     
         # --- Mapeamento e atualização dos atalhos (Multiplas Pastas) ---
-        Update-Shortcuts "C:\SACS\atalhos\Hemote Plus Update" $cliente
+        Update-Shortcuts 'C:\SACS\atalhos\Hemote Plus Update' $cliente
 
         Update-Status
         $msgLabel.ForeColor = [System.Drawing.Color]::ForestGreen
-        $msgLabel.Text = "Cliente $cliente definido com sucesso!"
+        $msgLabel.Text = 'Cliente ' + $cliente + ' definido com sucesso!'
         $clearMsgTimer.Stop(); $clearMsgTimer.Start()
     }) | Out-Null
 
@@ -1096,7 +1097,7 @@ $button.Add_Click({
 $clearMsgTimer = New-Object System.Windows.Forms.Timer
 $clearMsgTimer.Interval = 5000
 $clearMsgTimer.Add_Tick({
-        $msgLabel.Text = ""
+        $msgLabel.Text = ''
         $clearMsgTimer.Stop()
     })
 

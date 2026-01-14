@@ -1,86 +1,81 @@
 # Clientes Hemote Plus - v11 🩸
 
-**Ferramenta para ajudar no dia a dia com os ambientes Hemote.**
+**Ferramenta para gerenciamento e troca rápida de configurações de ambientes Hemote.**
 
-O **Clientes Hemote Plus** serve para facilitar a vida de quem precisa trocar a configuração de clientes toda hora. Ele copia os arquivos sozinho e arruma os atalhos, ficando quietinho na bandeja do sistema sem atrapalhar.
-
----
-
-## 🚀 O que tem de novo?
-
-1.  **🔄 Botão de Atualizar:** 
-    *   Agora tem um botãozinho de "Recarregar" (aquele ↻) ao lado da lista. Se você colocar uma pasta nova de cliente, é só clicar nele que aparece na lista na hora.
-2.  **🛡️ Proteção contra Erros:** 
-    *   Antes de trocar, o programa confere se os arquivos importantes (`_data_access.ini` e `WebUpdate.ini`) estão mesmo na pasta. Se não estiverem, ele avisa e não deixa trocar, para não quebrar nada.
-3.  **🎨 Modo Escuro Melhorado:** 
-    *   Ficou mais bonito e confortável para os olhos, tudo escuro de verdade.
-4.  **🖱️ Controle "Escondido":** 
-    *   **Duplo clique** no ícone perto do relógio para **Mostrar** a janela.
-    *   **Duplo clique** de novo para **Esconder**.
-    *   O programa não fica ocupando espaço na barra de tarefas.
-5.  **✨ Atalhos Inteligentes:**
-    *   Ele renomeia os atalhos da pasta `Hemote Plus Update` automaticamente para você saber em qual cliente está.
+O **Clientes Hemote Plus** automatiza a substituição de arquivos de configuração (`_data_access.ini` e `WebUpdate.ini`) e a atualização de atalhos, operando discretamente a partir da bandeja do sistema (System Tray).
 
 ---
 
-## 📋 O que precisa para usar
+## 🚀 Novidades da Versão
 
-1.  **Windows 10 ou Windows 11.**
-2.  **Pastas no lugar certo:**
-    *   `C:\SACS` (Onde fica o sistema)
-    *   `C:\SACS\CLIENTES` (Onde você guarda as pastas dos clientes)
-    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update` (Se quiser que ele renomeie os atalhos).
+1.  **🔄 Atualização Manual de Lista:**
+    *   Implementado botão de atualização (Refresh ↻) adjacente ao combo de seleção. Permite recarregar manualmente a lista de clientes após alterações no diretório raiz, garantindo confiabilidade.
+2.  **🛡️ Validação de Integridade:**
+    *   Verificação prévia da existência dos arquivos críticos (`_data_access.ini` e `WebUpdate.ini`) no diretório de origem. A troca de ambiente é bloqueada caso os arquivos estejam ausentes, prevenindo inconsistências no sistema.
+3.  **🎨 Interface Dark Mode:**
+    *   Tema escuro aprimorado para conforto visual e integração com o estilo Windows 10/11.
+4.  **🖱️ Controle via System Tray:**
+    *   Minimização e restauração da interface através de duplo clique no ícone da bandeja.
+    *   A aplicação não ocupa espaço na barra de tarefas (Taskbar), mantendo o ambiente de trabalho limpo.
+5.  **✨ Gerenciamento de Atalhos:**
+    *   Renomeação automática dos atalhos no diretório `Hemote Plus Update` para refletir o cliente ativo, facilitando a identificação visual.
 
 ---
 
-## 🛠️ Passo a Passo
+## 📋 Pré-requisitos
 
-### 1️⃣ Primeiro Uso
-1.  Baixe o `Clientes Hemote.exe`.
-2.  Abra o arquivo.
-    *   ⚠ **Dica:** Ele não aparece na barra embaixo. Procure o ícone da **Gota de Sangue 🩸** perto do relógio do Windows.
-3.  Dê dois cliques na gotinha para abrir.
+1.  **Sistema Operacional:** Windows 10 ou Windows 11.
+2.  **Estrutura de Diretórios:**
+    *   `C:\SACS`: Diretório raiz do sistema.
+    *   `C:\SACS\CLIENTES`: Repositório das pastas de configuração de cada cliente.
+    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update`: Diretório alvo para renomeação dinâmica de atalhos.
 
-### 2️⃣ Configurando a Pasta
-Antes de começar, mostre onde estão os clientes:
-1.  No menu lá em cima, clique em **Configurações**.
-2.  Clique em **Clientes**.
-3.  Escolha a pasta onde estão as subpastas dos clientes (Normalmente `C:\SACS\CLIENTES`).
-4.  Pronto, a lista vai aparecer.
+---
 
-### 3️⃣ Como Trocar de Cliente
-1.  Abra o programa (dois cliques na gotinha).
-2.  Se escolheu um cliente novo e ele não apareceu, clique no botão ↻.
-3.  Escolha o cliente na lista.
-4.  Clique no botão azul **Confirmar**.
-    *   Se der tudo certo, vai aparecer uma mensagem verde.
-    *   Se tiver algum problema (arquivos faltando ou iguais a outro cliente), ele vai te avisar.
-5.  Dê dois cliques na gotinha para esconder a janela de novo.
+## 🛠️ Guia de Utilização
 
-### 4️⃣ Opções Visuais
+### 1️⃣ Inicialização
+1.  Execute o `Clientes Hemote.exe`.
+2.  A aplicação iniciará minimizada na bandeja do sistema (ícone Hemote).
+    *   ℹ **Nota:** O ícone pode estar oculto no menu de ícones ocultos (`^`) da barra de tarefas.
+
+### 2️⃣ Configuração Inicial
+Configure o diretório fonte dos clientes:
+1.  Acesse o menu **Configurações > Clientes**.
+2.  Selecione o diretório onde residem as subpastas dos clientes (Padrão: `C:\SACS\CLIENTES`).
+
+### 3️⃣ Troca de Ambiente
+1.  Restaure a janela com duplo clique no ícone da bandeja.
+2.  Caso tenha adicionado pastas recentemente, utilize o botão **Atualizar (↻)**.
+3.  Selecione o cliente desejado na lista suspensa.
+4.  Clique em **Confirmar**.
+    *   O sistema validará os arquivos e indicará sucesso ou falha (ex: arquivos ausentes ou duplicidade de parâmetros).
+5.  A janela pode ser minimizada novamente para a bandeja com duplo clique no ícone ou botão de fechar (se configurado para não encerrar).
+
+### 4️⃣ Personalização e Exibição
 No menu **Exibição**:
-*   **Modo Escuro:** Troca para o tema escuro.
-*   **Sempre Visível:** A janela fica por cima de tudo.
-*   **Opacidade:** Deixa a janela meio transparente.
-*   **Botão SACS:** Coloca um atalho rápido para abrir a pasta `C:\SACS`.
+*   **Modo Escuro:** Alterna o tema da interface.
+*   **Sempre Visível:** Mantém a janela sobreposta a outras aplicações (TopMost).
+*   **Opacidade:** Ajusta a transparência da janela.
+*   **Botão SACS:** Exibe/Oculta atalho rápido para o diretório raiz.
 
-### 5️⃣ Como Fechar de Vez
-Para fechar totalmente o programa:
-1.  Clique com o **botão direito** na Gota de Sangue 🩸.
-2.  Clique em **Sair**.
+### 5️⃣ Encerramento
+Para encerrar a execução do processo:
+1.  Clique com o **botão direito** no ícone da bandeja.
+2.  Selecione **Sair**.
 
 ---
 
-## ❓ Dúvidas Comuns
+## ❓ Troubleshooting
 
-**"Cadê o ícone?"**
-> O Windows gosta de esconder. Clique na setinha `^` perto do relógio e arraste a gotinha para fora.
+**Ícone não visível**
+> Verifique o menu de ícones ocultos (`^`) na barra de tarefas e arraste o ícone para a área visível para facilitar o acesso.
 
-**"Deu erro de arquivos ausentes"**
-> A pasta desse cliente deve estar vazia ou faltando arquivos. Dá uma olhada lá em `C:\SACS\CLIENTES`.
+**Erro: Arquivos de configuração ausentes**
+> O diretório selecionado para o cliente não contém os arquivos obrigatórios. Verifique a integridade da pasta em `C:\SACS\CLIENTES`.
 
-**"Deu erro de conflito"**
-> Esse cliente é igualzinho a outro que você já tem (mesmo código ou link). O programa avisa para evitar confusão.
+**Conflito de Configuração**
+> O sistema detectou duplicidade de parâmetros (`COD_HEM` ou `URL`) com outro cliente já mapeado.
 
 ---
 
