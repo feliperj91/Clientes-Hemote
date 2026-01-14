@@ -63,7 +63,7 @@ $configFile = "C:\SACS\config.json"
 $global:clientesPath = "C:\SACS\CLIENTES"
 $global:clientCache = @{} # Armazena info dos clientes para performance (Path, CodHem, Url)
 
-# Função para carregar clientes e popular cache (Otimização)
+# Função para carregar clientes e popular cache local
 function Load-Clientes {
     $comboBox.Items.Clear()
     $global:clientCache.Clear()
@@ -239,14 +239,13 @@ function Show-CodHemDialog {
         Atualizar-CodHem $valor
     }
 }
-# Função para atualizar status no rodapé
-# Função para atualizar status no rodapé (Segmentado)
+# --- Função para atualizar status visual no rodapé ---
 function Update-Status {
     $textoEsq = " "
     
     $textoEsq = " "
 
-    # 2. Atualiza Cliente
+    # Atualiza Cliente
     if ($menuClienteAtual.Checked) {
         $cliConfig = ""
         if (Test-Path $configFile) {
@@ -258,7 +257,7 @@ function Update-Status {
     
     $statusLabelClient.Text = $textoEsq
 
-    # 3. Atualiza CodHem
+    # Atualiza CodHem
     if ($menuCodHemAtual.Checked) {
         $valCod = Get-CodHemAtual
         if (-not $valCod) { $valCod = "---" }
@@ -269,7 +268,7 @@ function Update-Status {
     }
 }
 
-# --- Função de Atualização de Atalhos (Robusta) ---
+# --- Função de Atualização de Atalhos ---
 function Update-Shortcuts($pathAtalhos, $novoCliente) {
     if (Test-Path $pathAtalhos) {
         # Cria regex com todos os clientes conhecidos para garantir limpeza correta do nome
@@ -621,20 +620,17 @@ $menuExibicao.DropDownItems.Add($menuBotaoSacs)     | Out-Null
 $menuExibicao.DropDownItems.Add($menuModoEscuro)    | Out-Null
 $menuExibicao.DropDownItems.Add($menuSempreVisivel) | Out-Null
 $menuExibicao.DropDownItems.Add($menuOpacidade)     | Out-Null
-# Eventos de MouseHover para mostrar dicas no rodapé
+# --- Configuração de Eventos de Hover (Dicas de Ferramenta) ---
 
-# --- Timer para restaurar rodapé ---
+# Timer para restaurar o texto padrão do rodapé após alguns segundos
 $restoreStatusTimer = New-Object System.Windows.Forms.Timer
-$restoreStatusTimer.Interval = 4000   # tempo em ms (4 segundos, ajuste se quiser)
+$restoreStatusTimer.Interval = 4000
 $restoreStatusTimer.Add_Tick({
         $restoreStatusTimer.Stop()
         Update-Status
     })
 
-# Eventos de MouseHover para mostrar dicas no rodapé
-
-# Menus principais
-# Menus principais
+# --- Definição das mensagens de hover ---
 $btnRefresh.Add_MouseHover({ 
         $statusLabelClient.Text = 'Atualizar lista de clientes'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
@@ -728,7 +724,6 @@ function Apply-Theme {
         $menuStrip.Renderer = $null 
     }
 
-    # Aplica Dark Mode na Barra de Título (Windows 10/11)
     # Aplica Dark Mode na Barra de Título (Windows 10/11)
     try { [DarkModeHelper]::SetDarkMode($form.Handle, $menuModoEscuro.Checked) } catch {}
 
@@ -913,9 +908,6 @@ function Toggle-Form {
     }
 }
 
-# (Código do Tray movido para o Load)
-
-
 # --- Eventos de minimizar e fechar ---
 $form.Add_Resize({
         if ($form.WindowState -eq 'Minimized') {
@@ -982,8 +974,7 @@ $form.Add_Load({
 Load-Config
 Update-Status
 
-# --- Botão Confirmar ---
-# --- Botão Confirmar (Refatorado e Otimizado com Cache) ---
+# --- Evento: Botão Confirmar (Fluxo Principal) ---
 $button.Add_Click({
         $cliente = $comboBox.SelectedItem
         if (-not $cliente) { 
@@ -993,7 +984,7 @@ $button.Add_Click({
             return 
         }
 
-        # 1. Validação de Duplicidade (Usando Cache - Ultra Rápido)
+        # 1. Validação de Duplicidade (Cache)
         if ($menuValidarDuplicidade.Checked) {
             $dadosAtual = $global:clientCache[$cliente]
             if ($dadosAtual) {
@@ -1085,7 +1076,7 @@ $button.Add_Click({
 
         $config | ConvertTo-Json | Set-Content $configFile -Encoding UTF8
     
-        # --- Mapeamento e atualização dos atalhos (Multiplas Pastas) ---
+        # --- Mapeamento e atualização dos atalhos ---
         Update-Shortcuts 'C:\SACS\atalhos\Hemote Plus Update' $cliente
 
         Update-Status
