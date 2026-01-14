@@ -35,18 +35,18 @@ O **Clientes Hemote Plus** automatiza a substituição de arquivos de configura�
 
 ## 🛠️ Guia de Utilização
 
-### 1️⃣ Inicialização
+### 1. Inicialização
 1.  Execute o `Clientes Hemote.exe`.
 2.  A aplicação iniciará minimizada na bandeja do sistema.
     *   ℹ **Nota:** O ícone pode estar oculto no menu de ícones ocultos (`^`) da barra de tarefas.
 
-### 2️⃣ Configuração Inicial
+### 2. Configuração Inicial
 Configure o diretório fonte dos clientes:
 1.  Acesse o menu **Configurações > Clientes**.
 2.  Selecione o diretório onde residem as subpastas dos clientes (Padrão: `C:\SACS\CLIENTES`).
 3.  (Opcional) Ative **Iniciar com o Windows** no menu Configurações para execução automática.
 
-### 3️⃣ Troca de Ambiente
+### 3. Troca de Ambiente
 1.  Restaure a janela com duplo clique no ícone da bandeja.
 2.  Caso tenha adicionado pastas recentemente, utilize o botão **Atualizar (↻)**.
 3.  Selecione o cliente desejado na lista suspensa.
@@ -55,19 +55,19 @@ Configure o diretório fonte dos clientes:
     *   O sistema validará os arquivos e indicará sucesso ou falha (ex: arquivos ausentes ou duplicidade de parâmetros).
 6.  A janela pode ser minimizada novamente para a bandeja com duplo clique no ícone ou botão de fechar.
 
-### 4️⃣ Gestão de COD_HEM
+### 4. Gestão de COD_HEM
 O sistema oferece duas formas de manipular o parâmetro `COD_HEM` no arquivo `_data_access.ini`:
 *   **Via Menu (Automação):** Se a opção **Configurações > Altera COD_HEM** estiver ativa, o sistema solicitará automaticamente o novo código logo após a confirmação da troca de cliente.
 *   **Via Rodapé (Manual):** Clicar na etiqueta **"COD: XXX"** na barra de status inferior permite editar o código do cliente atual a qualquer momento, sem necessidade de trocar de ambiente.
 
-### 5️⃣ Personalização e Exibição
+### 5. Personalização e Exibição
 No menu **Exibição**:
 *   **Modo Escuro:** Alterna o tema da interface.
 *   **Sempre Visível:** Mantém a janela sobreposta a outras aplicações.
 *   **Opacidade:** Ajusta a transparência da janela.
 *   **Botão SACS:** Exibe/Oculta atalho rápido para o diretório raiz no rodapé.
 
-### 6️⃣ Encerramento
+### 6. Encerramento
 Para encerrar a execução do processo:
 1.  Clique com o **botão direito** no ícone da bandeja.
 2.  Selecione **Sair**.
