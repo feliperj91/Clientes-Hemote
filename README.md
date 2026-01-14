@@ -50,12 +50,12 @@ Configure o diretório fonte dos clientes:
 3.  Selecione o cliente desejado na lista suspensa.
 4.  Clique em **Confirmar**.
     *   O sistema validará os arquivos e indicará sucesso ou falha (ex: arquivos ausentes ou duplicidade de parâmetros).
-5.  A janela pode ser minimizada novamente para a bandeja com duplo clique no ícone ou botão de fechar (se configurado para não encerrar).
+5.  A janela pode ser minimizada novamente para a bandeja com duplo clique no ícone ou botão de fechar.
 
 ### 4️⃣ Personalização e Exibição
 No menu **Exibição**:
 *   **Modo Escuro:** Alterna o tema da interface.
-*   **Sempre Visível:** Mantém a janela sobreposta a outras aplicações (TopMost).
+*   **Sempre Visível:** Mantém a janela sobreposta a outras aplicações.
 *   **Opacidade:** Ajusta a transparência da janela.
 *   **Botão SACS:** Exibe/Oculta atalho rápido para o diretório raiz.
 
