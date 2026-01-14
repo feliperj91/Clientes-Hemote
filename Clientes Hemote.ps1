@@ -479,14 +479,15 @@ $sobreLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9) # Mantém 9 no 
 $sobreLabel.Text = @"
 Clientes Hemote Plus - v11
 
-• Troca Rápida: Alterne entre clientes com atualização dos atalhos.
-• Botão Atualizar: Recarregue a lista de clientes manualmente.
-• Segurança: O sistema avisa se houver duplicidade de configurações.
-• Produtividade: Edição rápida de COD_HEM e acesso à pasta SACS.
-• Controle: Opacidade, 'Sempre Visível' e modo discreto na bandeja.
+• Troca Rápida: Atualização auto de atalhos.
+• Botão Atualizar (↻): Recarrega a lista.
+• Segurança: Valida arquivos e duplicidade.
+• Produtividade: Edita COD_HEM e abre SACS.
+• Controle: Opacidade, TopMost e Tray.
+• Extras: Iniciar com Windows eatalhos.
 
-Desenvolvido por: Felipe Almeida
-Última Atualização: Janeiro de 2026
+Dev: Felipe Almeida
+Atualização: Jan/2026
 "@
 $painelSobre.Controls.Add($sobreLabel)
 
