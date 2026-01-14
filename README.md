@@ -29,7 +29,7 @@ O **Clientes Hemote Plus** automatiza a substituição de arquivos de configura�
 2.  **Estrutura de Diretórios:**
     *   `C:\SACS`: Diretório raiz do sistema.
     *   `C:\SACS\CLIENTES`: Repositório das pastas de configuração de cada cliente.
-    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update`: Diretório alvo para renomeação dinâmica de atalhos.
+    *   `C:\SACS\atalhos\Hemote Plus Update`: Diretório alvo para renomeação dinâmica de atalhos.
 
 ---
 
@@ -52,7 +52,8 @@ Configure o diretório fonte dos clientes:
 3.  Selecione o cliente desejado na lista suspensa.
 4.  **Atalhos Rápidos:** O ícone de **Pasta Amarela** ao lado do botão Confirmar abre diretamente o diretório de atalhos (`C:\SACS\atalhos\Hemote Plus Update`) para verificação rápida.
 5.  Clique em **Confirmar**.
-    *   O sistema validará os arquivos e indicará sucesso ou falha.
+    *   O sistema validará os arquivos e indicará sucesso ou falha (ex: arquivos ausentes ou duplicidade de parâmetros).
+6.  A janela pode ser minimizada novamente para a bandeja com duplo clique no ícone ou botão de fechar.
 
 ### 4️⃣ Gestão de COD_HEM
 O sistema oferece duas formas de manipular o parâmetro `COD_HEM` no arquivo `_data_access.ini`:
@@ -62,7 +63,7 @@ O sistema oferece duas formas de manipular o parâmetro `COD_HEM` no arquivo `_d
 ### 5️⃣ Personalização e Exibição
 No menu **Exibição**:
 *   **Modo Escuro:** Alterna o tema da interface.
-*   **Sempre Visível:** Mantém a janela sobreposta a outras aplicações (TopMost).
+*   **Sempre Visível:** Mantém a janela sobreposta a outras aplicações.
 *   **Opacidade:** Ajusta a transparência da janela.
 *   **Botão SACS:** Exibe/Oculta atalho rápido para o diretório raiz no rodapé.
 
