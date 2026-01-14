@@ -6,15 +6,21 @@ O **Clientes Hemote Plus** é um utilitário desenvolvido para agilizar a rotina
 
 ---
 
-## 🚀 Funcionalidades Confirmadas
+## 🚀 Novidades da Versão (Atualizado)
 
-*   **⚡ Troca Rápida de Ambiente:** Altera automaticamente os arquivos `_data_access.ini`, `WebUpdate.ini` e logos na pasta raiz `C:\SACS`.
-*   **🕵️‍♂️ Comportamento "Stealth" (Bandeja do Sistema):** O programa **não ocupa espaço na sua barra de tarefas**. Ele fica acessível exclusivamente pelo ícone na **Bandeja do Sistema** (ao lado do relógio do Windows), ideal para manter aberto o dia todo sem poluir sua área de trabalho.
-*   **🌙 Modo Escuro Inteligente:** Interface adaptada com suporte a *Dark Mode* real (incluindo a barra de título) no Windows 10 e 11.
-*   **🛡️ Auditoria de Duplicidade:** O sistema escaneia todos os clientes e impede que você selecione um ambiente que tenha o mesmo código (`COD_HEM`) ou URL de conexão de outro cliente já mapeado, evitando erros operacionais.
-*   **🔗 Gestão Automática de Atalhos:** Ao trocar de cliente, o sistema busca atalhos na pasta `C:\SACS\atalhos\Hemote Plus Update` e os renomeia com o nome do cliente atual (ex: `Hemote - Unimed.lnk`), facilitando a identificação visual.
-*   **📝 Edição de COD_HEM:** Permite alterar o código da unidade manualmente através de um diálogo dedicado, caso necessário.
-*   **👻 Sempre em Segundo Plano:** Ao clicar no "X" para fechar, o programa apenas se esconde na bandeja, pronto para ser chamado novamente.
+1.  **👁️ Monitoramento em Tempo Real:** 
+    *   Não é mais necessário reiniciar o programa ao adicionar novos clientes! O sistema detecta automaticamente se você criar, renomear ou excluir pastas em `C:\SACS\CLIENTES` e atualiza a lista na hora.
+2.  **🛡️ Validação de Integridade:** 
+    *   Antes de trocar o cliente, o sistema verifica se os arquivos críticos (`_data_access.ini` e `WebUpdate.ini`) realmente existem na pasta de origem. Se estiverem faltando, ele avisa e impede a troca, prevenindo configurações quebradas.
+3.  **🎨 Modo Escuro Aprimorado:** 
+    *   Visual "Solid Dark" sem bordas brancas irritantes nos menus.
+    *   Destaques em cinza escuro para maior conforto visual.
+4.  **🖱️ Controle de Bandeja Inteligente:** 
+    *   **Duplo clique** no ícone da bandeja para **Mostrar** a janela.
+    *   **Duplo clique** novamente para **Minimizar** de volta para a bandeja.
+    *   O programa fica totalmente oculto da barra de tarefas ("Stealth Mode").
+5.  **🔄 Botão de Atualização Manual:**
+    *   Caso precise forçar uma atualização, um botão "Refresh" (↻) foi adicionado ao lado da lista de clientes.
 
 ---
 
@@ -24,8 +30,8 @@ Para o funcionamento correto, assegure-se de que sua máquina possui:
 1.  **Sistema Operacional:** Windows 10 ou Windows 11.
 2.  **Estrutura de Pastas Obrigatória:**
     *   `C:\SACS` (Raiz do sistema)
-    *   `C:\SACS\CLIENTES` (Ou outra pasta contendo as subpastas de cada cliente)
-    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update` (Para a funcionalidade de renomear atalhos funcionar).
+    *   `C:\SACS\CLIENTES` (Onde ficam as subpastas de cada cliente)
+    *   **Opcional:** `C:\SACS\atalhos\Hemote Plus Update` (Para a funcionalidade automática de renomear atalhos).
 
 ---
 
@@ -36,7 +42,7 @@ Siga este guia para configurar e operar o sistema corretamente.
 ### 1️⃣ Instalação e Primeira Execução
 1.  Baixe e coloque o arquivo `Clientes Hemote.exe` em um local seguro (ex: `C:\SACS` ou sua Área de Trabalho).
 2.  Execute o arquivo.
-    *   ⚠ **Atenção:** O programa **NÃO** aparecerá na barra horizontal inferior do Windows. Procure pelo ícone de uma **Gota de Sangue 🩸** perto do relógio (pode ser necessário clicar na setinha `^` para mostrar ícones ocultos).
+    *   ⚠ **Atenção:** O programa **NÃO** aparecerá na barra horizontal inferior do Windows. Procure pelo ícone de uma **Gota de Sangue 🩸** perto do relógio (Bandeja do Sistema).
 3.  Dê um duplo clique no ícone da gota para abrir a janela principal.
 
 ### 2️⃣ Configurando a Pasta de Clientes
@@ -44,26 +50,28 @@ Antes de usar, você precisa dizer ao programa onde os dados dos clientes estão
 1.  Na janela do programa, clique no menu superior **Configurações**.
 2.  Clique em **Clientes**.
 3.  Uma janela de seleção de pasta abrirá. Navegue e selecione a pasta que contém as subpastas dos clientes (Geralmente `C:\SACS\CLIENTES`).
-4.  O sistema irá carregar a lista imediatamente.
+4.  O sistema irá carregar a lista automaticamente.
 
 ### 3️⃣ Trocando de Cliente (Uso Diário)
-1.  Abra o programa (duplo clique no ícone da bandeja).
-2.  Na lista (ComboBox), selecione o nome do cliente desejado.
+1.  Abra o programa (duplo clique no ícone da bandeja ou use o botão ↻ se adicionou arquivos recentemente).
+2.  Na lista (ComboBox), selecione o nome do cliente.
 3.  Clique no botão azul **Confirmar**.
-    *   O sistema copiará os arquivos.
-    *   Os atalhos serão renomeados.
-    *   Uma mensagem verde confirmará o sucesso no rodapé.
-4.  Pode fechar a janela (ela voltará para a bandeja) e iniciar seu trabalho no sistema Hemote.
+    *   O sistema verifica se os arquivos existem.
+    *   Se houver duplicidade de `COD_HEM` ou `URL` com outro cliente, ele avisa.
+    *   Se tudo estiver ok, ele copia os arquivos e renomeia o atalho em `Hemote Plus Update`.
+    *   Uma mensagem verde confirmará o sucesso.
+4.  Dê um duplo clique no ícone da bandeja para esconder a janela novamente.
 
-### 4️⃣ Configurando Opções Extras
-No menu **Exibição**, você pode personalizar sua experiência:
-*   **Modo Escuro:** Alterna as cores da interface, ideal para ambientes com pouca luz.
-*   **Sempre Visível:** Mantém a janelinha do programa flutuando acima de qualquer outra janela aberta (útil durante manutenções).
-*   **Opacidade:** Deixa a janela transparente (estilo "Fantasma") para ver o que está atrás.
+### 4️⃣ Configurando Opções de Exibição
+No menu **Exibição**, personalize sua experiência:
+*   **Modo Escuro:** Alterna para o novo tema escuro refinado.
+*   **Sempre Visível:** Mantém a janelinha flutuando acima de tudo.
+*   **Opacidade:** Deixa a janela transparente ("Fantasma").
+*   **Botão SACS:** Adiciona um atalho rápido no rodapé para abrir a pasta `C:\SACS`.
 
 ### 5️⃣ Como Fechar o Programa Definitivamente
-Como o botão "X" apenas minimiza o programa para a bandeja:
-1.  Clique com o **botão direito** no ícone da Gota de Sangue 🩸 lá perto do relógio.
+Como o botão "X" apenas minimiza o programa para a bandeja (para não fechar por acidente):
+1.  Clique com o **botão direito** no ícone da Gota de Sangue 🩸 perto do relógio.
 2.  Selecione a opção **Sair**.
 
 ---
@@ -71,13 +79,13 @@ Como o botão "X" apenas minimiza o programa para a bandeja:
 ## ❓ Resolução de Problemas Comuns
 
 **"Não encontro o ícone do programa!"**
-> O Windows costuma esconder ícones pouco usados. Clique na setinha `^` na barra de tarefas (canto inferior direito) e arraste o ícone da gota para fora, deixando-o sempre visível.
+> O Windows costuma esconder ícones pouco usados. Clique na setinha `^` na barra de tarefas (canto inferior direito) e arraste o ícone da gota para fora.
 
-**"O Dark Mode não deixou a barra de título preta."**
-> A barra de título escura requer Windows 10 (versão 2004 ou superior) ou Windows 11. Em versões antigas do Windows 10 ou anteriores, a barra permanecerá da cor padrão do sistema, mas o restante da interface ficará escuro.
+**"Erro: Arquivos de configuração ausentes"**
+> Isso significa que a pasta do cliente que você selecionou está vazia ou faltando o `_data_access.ini` ou `WebUpdate.ini`. Verifique a pasta em `C:\SACS\CLIENTES`.
 
-**"Erro: Conflito de Duplicidade"**
-> O programa detectou que o cliente que você tentou selecionar possui o mesmo `COD_HEM` ou `URL` de outro cliente na pasta. Verifique os arquivos `.ini` desses clientes para corrigir a duplicidade.
+**"Erro: Conflito de data_access e WebUpdate"**
+> O programa detectou que o cliente selecionado tem exatamente as mesmas configurações de outro cliente já existente. Ele mostrará qual arquivo está conflitando para você corrigir.
 
 ---
 

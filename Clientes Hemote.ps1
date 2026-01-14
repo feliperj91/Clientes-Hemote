@@ -26,6 +26,29 @@ public class DarkModeHelper {
 "@
 Add-Type -TypeDefinition $code -Language CSharp
 
+# Classe para customizar cores do MenuStrip (Remove a barra branca e ajusta cores)
+$menuCode = @"
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+public class DarkModeTable : ProfessionalColorTable {
+    public override Color MenuBorder { get { return Color.FromArgb(30, 30, 30); } }
+    public override Color MenuItemSelected { get { return Color.FromArgb(60, 60, 60); } }
+    public override Color MenuItemBorder { get { return Color.FromArgb(60, 60, 60); } }
+    public override Color MenuStripGradientBegin { get { return Color.FromArgb(30, 30, 30); } }
+    public override Color MenuStripGradientEnd { get { return Color.FromArgb(30, 30, 30); } }
+    public override Color MenuItemPressedGradientBegin { get { return Color.FromArgb(45, 45, 48); } }
+    public override Color MenuItemPressedGradientEnd { get { return Color.FromArgb(45, 45, 48); } }
+    public override Color ToolStripDropDownBackground { get { return Color.FromArgb(30, 30, 30); } }
+    public override Color ImageMarginGradientBegin { get { return Color.FromArgb(30, 30, 30); } }
+    public override Color ImageMarginGradientMiddle { get { return Color.FromArgb(30, 30, 30); } }
+    public override Color ImageMarginGradientEnd { get { return Color.FromArgb(30, 30, 30); } }
+    public override Color MenuItemSelectedGradientBegin { get { return Color.FromArgb(60, 60, 60); } }
+    public override Color MenuItemSelectedGradientEnd { get { return Color.FromArgb(60, 60, 60); } }
+}
+"@
+Add-Type -TypeDefinition $menuCode -ReferencedAssemblies System.Windows.Forms, System.Drawing
+
 # Mutex para evitar múltiplas instâncias
 $createdNew = $false
 $refCreatedNew = [ref]$createdNew
@@ -48,6 +71,9 @@ function Load-Clientes {
     if (Test-Path $global:clientesPath) {
         $statusLabelClient.Text = "Carregando clientes..."
         [System.Windows.Forms.Application]::DoEvents()
+
+        # Guarda seleção atual para tentar restaurar
+        $selAtual = $comboBox.SelectedItem
 
         Get-ChildItem -Path $global:clientesPath -Directory | ForEach-Object {
             $clientePath = $_.FullName
@@ -82,9 +108,23 @@ function Load-Clientes {
                 }
             }
         }
+        
+        # Restaura seleção se ainda existir
+        if ($selAtual -and $comboBox.Items.Contains($selAtual)) {
+            $comboBox.SelectedItem = $selAtual
+        }
+        else {
+            $comboBox.Text = ""
+            $comboBox.SelectedIndex = -1
+        }
+        
         $statusLabelClient.Text = "Pronto."
     }
+    
+    # Configura/Atualiza o watcher sempre que carregar (garante path correto)
+    Setup-Watcher
 }
+
 
 # Função para obter COD_HEM atual
 function Get-CodHemAtual {
@@ -230,6 +270,79 @@ function Update-Status {
     }
 }
 
+# --- Função de Atualização de Atalhos (Robusta) ---
+function Update-Shortcuts($pathAtalhos, $novoCliente) {
+    if (Test-Path $pathAtalhos) {
+        # Cria regex com todos os clientes conhecidos para garantir limpeza correta do nome
+        # Evita bugs como "App - Cliente - Cliente"
+        $clientesConhecidos = @($comboBox.Items)
+        if ($clientesConhecidos.Count -gt 0) {
+            $patternClientes = $clientesConhecidos | ForEach-Object { [regex]::Escape($_) }
+            $regexSuffix = " - (" + ($patternClientes -join '|') + ")$"
+        }
+        else {
+            $regexSuffix = " - .*$" # Fallback genérico
+        }
+
+        Get-ChildItem -Path $pathAtalhos -Filter "*.lnk" | ForEach-Object {
+            $atalho = $_
+            $atalhoOriginal = $atalho.FullName
+            
+            # Remove sufixo de cliente anterior se houver
+            $nomeBase = $atalho.BaseName -replace $regexSuffix, ""
+            
+            # Novo nome
+            $novoNome = "$nomeBase - $novoCliente.lnk"
+            $novoCaminho = Join-Path $pathAtalhos $novoNome
+
+            # Renomeia se necessário
+            if ($atalhoOriginal -ne $novoCaminho) {
+                if (Test-Path $novoCaminho) {
+                    # Evita duplicatas removendo o antigo que entraria em conflito
+                    Remove-Item -Path $atalhoOriginal -Force
+                }
+                else {
+                    Rename-Item -Path $atalhoOriginal -NewName $novoNome -Force
+                }
+            }
+        }
+    }
+}
+
+# --- Monitoramento de Pasta (Auto-Refresh) ---
+$script:fileWatcher = $null
+
+function Setup-Watcher {
+    # Limpeza prévia robusta
+    Get-EventSubscriber | Where-Object { $_.SourceIdentifier -like "FileWatcher_Clientes_*" } | Unregister-Event -Force -ErrorAction SilentlyContinue
+    
+    if ($script:fileWatcher) {
+        $script:fileWatcher.Dispose()
+        $script:fileWatcher = $null
+    }
+
+    if (Test-Path $global:clientesPath) {
+        $script:fileWatcher = New-Object System.IO.FileSystemWatcher
+        $script:fileWatcher.Path = $global:clientesPath
+        $script:fileWatcher.NotifyFilter = [System.IO.NotifyFilters]::DirectoryName -bor [System.IO.NotifyFilters]::FileName
+        $script:fileWatcher.IncludeSubdirectories = $true
+        $script:fileWatcher.EnableRaisingEvents = $true
+
+        $action = {
+            # Invoca na thread da UI para evitar erro
+            $form.Invoke({ 
+                    Load-Clientes
+                    Update-Status
+                })
+        }
+
+        # Eventos que disparam o refresh com IDs ÚNICOS
+        Register-ObjectEvent -InputObject $script:fileWatcher -EventName "Created" -SourceIdentifier "FileWatcher_Clientes_Created" -Action $action | Out-Null
+        Register-ObjectEvent -InputObject $script:fileWatcher -EventName "Deleted" -SourceIdentifier "FileWatcher_Clientes_Deleted" -Action $action | Out-Null
+        Register-ObjectEvent -InputObject $script:fileWatcher -EventName "Renamed" -SourceIdentifier "FileWatcher_Clientes_Renamed" -Action $action | Out-Null
+    }
+}
+
 # Form principal
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Clientes Hemote Plus'
@@ -303,9 +416,24 @@ $form.Controls.Add($painelInicio)
 
 
 # --- Painel Início (Modernizado) ---
+$btnRefresh = New-Object System.Windows.Forms.Button
+$btnRefresh.Text = '↻' # Símbolo de Refresh
+$btnRefresh.Location = New-Object System.Drawing.Point(10, 13)
+$btnRefresh.Size = New-Object System.Drawing.Size(30, 30)
+$btnRefresh.FlatStyle = 'Flat'
+$btnRefresh.FlatAppearance.BorderSize = 0
+$btnRefresh.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 14, [System.Drawing.FontStyle]::Bold)
+$btnRefresh.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnRefresh.TextAlign = 'MiddleCenter'
+$btnRefresh.Add_Click({ 
+        Load-Clientes
+        Update-Status 
+    })
+$painelInicio.Controls.Add($btnRefresh)
+
 $comboBox = New-Object System.Windows.Forms.ComboBox
-$comboBox.Location = New-Object System.Drawing.Point(10, 15)
-$comboBox.Size = New-Object System.Drawing.Size(330, 28) 
+$comboBox.Location = New-Object System.Drawing.Point(45, 15) # Deslocado para direita
+$comboBox.Size = New-Object System.Drawing.Size(295, 28) # Reduzido para caber
 $comboBox.DropDownStyle = 'DropDownList'
 $comboBox.FlatStyle = 'System' # Usa renderização nativa (corrige fundo azul)
 $comboBox.Add_KeyPress({ $_.Handled = $true }) # Previne digitação no modo DropDown (Dark Mode Hack)
@@ -539,6 +667,10 @@ $restoreStatusTimer.Add_Tick({
 
 # Menus principais
 # Menus principais
+$btnRefresh.Add_MouseHover({ 
+        $statusLabelClient.Text = "Atualizar lista de clientes"
+        $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
+    })
 $menuInicio.Add_MouseHover({ 
         $statusLabelClient.Text = "Voltar para a tela inicial de seleção de cliente"
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
@@ -607,18 +739,25 @@ $menuOpacidade.Add_MouseHover({
 # --- Função de Tema (Dark Mode) ---
 function Apply-Theme {
     if ($menuModoEscuro.Checked) {
-        $bg = [System.Drawing.Color]::FromArgb(45, 45, 48) # VS Code Dark
+        $bg = [System.Drawing.Color]::FromArgb(30, 30, 30) # Unificado com Painéis
         $panelBg = [System.Drawing.Color]::FromArgb(30, 30, 30)
         $fg = [System.Drawing.Color]::WhiteSmoke
         $inputBg = [System.Drawing.Color]::FromArgb(60, 60, 60)
-        $btnPastaBg = [System.Drawing.Color]::FromArgb(80, 80, 80)
+        $btnPastaBg = $panelBg # Fundo igual ao painel (sem caixa de cor)
+        
+        # Ativa Renderização Customizada (Remove Barra Branca)
+        $menuStrip.Renderer = New-Object System.Windows.Forms.ToolStripProfessionalRenderer(New-Object DarkModeTable)
     }
     else {
         $bg = [System.Drawing.Color]::White
         $panelBg = [System.Drawing.Color]::White
         $fg = [System.Drawing.Color]::Black
         $inputBg = [System.Drawing.Color]::White
-        $btnPastaBg = [System.Drawing.Color]::WhiteSmoke
+        $btnPastaBg = $panelBg # Fundo igual ao painel (sem caixa de cor)
+        
+        # Restaura Renderização do Sistema (Padrão)
+        $menuStrip.RenderMode = [System.Windows.Forms.ToolStripRenderMode]::System
+        $menuStrip.Renderer = $null 
     }
 
     # Aplica Dark Mode na Barra de Título (Windows 10/11)
@@ -651,8 +790,22 @@ function Apply-Theme {
         $comboBox.ForeColor = [System.Drawing.Color]::Black
     }
     
+    $btnRefresh.BackColor = $btnPastaBg
+    $btnRefresh.ForeColor = $fg
     $btnPasta.BackColor = $btnPastaBg
     $sobreLabel.ForeColor = $fg
+    
+    # Atualiza cor do texto dos menus recursivamente
+    $updateColors = {
+        param($items)
+        foreach ($i in $items) {
+            $i.ForeColor = $fg
+            if ($i -is [System.Windows.Forms.ToolStripMenuItem]) {
+                & $updateColors $i.DropDownItems
+            }
+        }
+    }
+    & $updateColors $menuStrip.Items
     
     # Invalida para redesenhar bordas se necessário
     $form.Refresh()
@@ -780,6 +933,16 @@ function Show-Form {
     $form.Show()
     $form.WindowState = 'Normal'
     $form.Activate()
+    $form.ShowInTaskbar = $false
+}
+
+function Toggle-Form {
+    if ($form.Visible -and $form.WindowState -ne 'Minimized') {
+        $form.WindowState = 'Minimized' # O evento Resize cuidará de esconder
+    }
+    else {
+        Show-Form
+    }
 }
 
 # (Código do Tray movido para o Load)
@@ -841,7 +1004,7 @@ $form.Add_Load({
         [void]$trayMenu.Items.Add($trayItemSair)
     
         $notifyIcon.ContextMenuStrip = $trayMenu
-        $notifyIcon.Add_MouseDoubleClick({ Show-Form })
+        $notifyIcon.Add_MouseDoubleClick({ Toggle-Form })
 
         # 2. Configura Ícone da Janela
         $form.Icon = $icon
@@ -870,11 +1033,17 @@ $button.Add_Click({
                 $global:clientCache.GetEnumerator() | ForEach-Object {
                     if ($_.Key -ne $cliente) {
                         $dadosOutro = $_.Value
+                        $conflitos = @()
+                        
                         if ($dadosAtual.CodHem -ne "" -and $dadosAtual.CodHem -eq $dadosOutro.CodHem) {
-                            $duplicados += "$($_.Key) (data_access)"
+                            $conflitos += "data_access"
                         }
-                        elseif ($dadosAtual.Url -ne "" -and $dadosAtual.Url -eq $dadosOutro.Url) {
-                            $duplicados += "$($_.Key) (WebUpdate)"
+                        if ($dadosAtual.Url -ne "" -and $dadosAtual.Url -eq $dadosOutro.Url) {
+                            $conflitos += "WebUpdate"
+                        }
+                        
+                        if ($conflitos.Count -gt 0) {
+                            $duplicados += "$($_.Key) ($($conflitos -join ' e '))"
                         }
                     }
                 }
@@ -895,6 +1064,21 @@ $button.Add_Click({
             else {
                 # Fallback caso cache falhe por algum motivo raro
                 $origemCliente = Join-Path $global:clientesPath $cliente
+            }
+
+            # Validação Rígida: Verifica se os arquivos REALMENTE existem antes de prosseguir
+            # (Corrige o problema de alterar para uma pasta que foi esvaziada recentemente)
+            $testeIni = Join-Path $origemCliente "_data_access.ini"
+            $testeWeb = Join-Path $origemCliente "WebUpdate.ini"
+            
+            if (-not (Test-Path $testeIni) -or -not (Test-Path $testeWeb)) {
+                $msgLabel.ForeColor = [System.Drawing.Color]::Blue
+                $msgLabel.Text = "Erro: Arquivos de configuração ausentes na pasta!"
+                $clearMsgTimer.Stop(); $clearMsgTimer.Start()
+                 
+                # Opcional: Força recarregar a lista já que encontramos uma inconsistência
+                Load-Clientes
+                return
             }
 
             # Arquivos para C:\SACS
@@ -933,41 +1117,8 @@ $button.Add_Click({
 
         $config | ConvertTo-Json | Set-Content $configFile -Encoding UTF8
     
-        # --- Mapeamento e atualização dos atalhos ---
-        $atalhosPath = "C:\SACS\atalhos\Hemote Plus Update"
-        if (Test-Path $atalhosPath) {
-            Get-ChildItem -Path $atalhosPath -Filter "*.lnk" | ForEach-Object {
-                $atalho = $_
-                $atalhoOriginal = $atalho.FullName
-                $nomeBase = $atalho.BaseName
-
-                # Remove cliente anterior, se houver (último sufixo após " - ")
-                $partes = $nomeBase -split ' - '
-                if ($partes.Count -gt 2) {
-                    $nomeLimpo = ($partes[0..1] -join ' - ')
-                }
-                else {
-                    $nomeLimpo = $nomeBase
-                }
-
-                # Novo nome com cliente atual
-                $novoNome = "$nomeLimpo - $cliente.lnk"
-                $novoCaminho = Join-Path $atalhosPath $novoNome
-
-                # Renomeia se necessário
-                if ($atalhoOriginal -ne $novoCaminho) {
-                    if (Test-Path $novoCaminho) {
-                        # CONFLITO: O arquivo de destino já existe!
-                        # Isso acontece quando há duplicatas (ex: "Arquivo.lnk" e "Arquivo - Old.lnk").
-                        # Solução: Removemos este arquivo redundante para limpar a pasta e manter apenas um atualizado.
-                        Remove-Item -Path $atalhoOriginal -Force
-                    }
-                    else {
-                        Rename-Item -Path $atalhoOriginal -NewName $novoNome -Force
-                    }
-                }
-            }
-        }
+        # --- Mapeamento e atualização dos atalhos (Multiplas Pastas) ---
+        Update-Shortcuts "C:\SACS\atalhos\Hemote Plus Update" $cliente
 
         Update-Status
         $msgLabel.ForeColor = [System.Drawing.Color]::ForestGreen
@@ -988,5 +1139,11 @@ try {
     [System.Windows.Forms.Application]::Run($form)
 }
 finally {
+    # Limpeza
+    Get-EventSubscriber | Where-Object { $_.SourceIdentifier -like "FileWatcher_Clientes_*" } | Unregister-Event -Force -ErrorAction SilentlyContinue
+    
+    if ($script:fileWatcher) {
+        $script:fileWatcher.Dispose()
+    }
     try { $mutex.ReleaseMutex() } catch {}
 }
