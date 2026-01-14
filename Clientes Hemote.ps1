@@ -480,7 +480,7 @@ $sobreLabel.Text = @"
 Clientes Hemote Plus - v11
 
 • Troca Rápida: Alterne entre clientes com atualização dos atalhos.
-• Botão Atualizar: Recarregue a lista de clientes manualmente se adicionar novas pastas.
+• Botão Atualizar: Recarregue a lista de clientes manualmente.
 • Segurança: O sistema avisa se houver duplicidade de configurações.
 • Produtividade: Edição rápida de COD_HEM e acesso à pasta SACS.
 • Controle: Opacidade, 'Sempre Visível' e modo discreto na bandeja.
