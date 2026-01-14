@@ -486,7 +486,7 @@ Clientes Hemote Plus - v11
 • Sistema: Iniciar c/ Windows e Tray discreto.
 • Extra: Edição rápida do COD_HEM.
 
-Dev: Felipe Almeida
+Autor: Felipe Almeida
 Versão: Jan/2026
 "@
 $painelSobre.Controls.Add($sobreLabel)
