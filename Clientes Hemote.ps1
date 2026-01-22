@@ -2,7 +2,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
-# Classe auxiliar para manipular Title Bar (Dark Mode nativo do Windows)
+# Classe auxiliar para aplicar Dark Mode nativo do Windows na barra de título
 $code = @"
 using System;
 using System.Runtime.InteropServices;
@@ -26,7 +26,7 @@ public class DarkModeHelper {
 "@
 Add-Type -TypeDefinition $code -Language CSharp
 
-# Classe para customizar cores do MenuStrip (Remove a barra branca e ajusta cores)
+# Classe para customizar cores do MenuStrip no modo escuro
 $menuCode = @"
 using System;
 using System.Drawing;
@@ -61,9 +61,9 @@ if (-not $refCreatedNew.Value) {
 $script:exiting = $false
 $configFile = "C:\SACS\config.json"
 $global:clientesPath = "C:\SACS\CLIENTES"
-$global:clientCache = @{} # Armazena info dos clientes para performance (Path, CodHem, Url)
+$global:clientCache = @{} # Cache de informações dos clientes (Path, CodHem, Url) para melhor performance
 
-# Função para carregar clientes e popular cache local
+# Carrega lista de clientes do diretório e popula o cache local
 function Load-Clientes {
     $comboBox.Items.Clear()
     $global:clientCache.Clear()
@@ -72,7 +72,7 @@ function Load-Clientes {
         $statusLabelClient.Text = "Carregando clientes..."
         [System.Windows.Forms.Application]::DoEvents()
 
-        # Guarda seleção atual para tentar restaurar
+        # Salva seleção atual para restaurar após recarregar
         $selAtual = $comboBox.SelectedItem
 
         Get-ChildItem -Path $global:clientesPath -Directory | ForEach-Object {
@@ -84,7 +84,7 @@ function Load-Clientes {
             if ((Test-Path $iniPath) -and (Test-Path $webPath)) {
                 $comboBox.Items.Add($nome) | Out-Null
                 
-                # Pré-carregar dados para o cache
+                # Pré-carrega dados do cliente para o cache
                 $codHem = ""
                 $url = ""
                 
@@ -140,7 +140,7 @@ function Get-CodHemAtual {
     return ''
 }
 
-# --- Função auxiliar para atualizar COD_HEM sem corromper o arquivo ---
+# --- Função auxiliar para atualizar o parâmetro COD_HEM no arquivo ini ---
 function Atualizar-CodHem($valor) {
     $iniPath = "C:\SACS\_data_access.ini"
     if (Test-Path $iniPath) {
@@ -162,34 +162,84 @@ function Atualizar-CodHem($valor) {
     }
 }
 
-# --- Função para alterar COD_HEM ---
+# --- Diálogo moderno para alteração do COD_HEM ---
 function Show-CodHemDialog {
     $dialog = New-Object System.Windows.Forms.Form
-    $dialog.Text = "Alterar COD_HEM"
-    $dialog.Size = New-Object System.Drawing.Size(320, 180) # Moderno
+    $dialog.Text = "Alterar COD_HEM" # Texto para Narrador/Taskbar
+    $dialog.Size = New-Object System.Drawing.Size(340, 160)
     $dialog.StartPosition = "CenterParent"
-    $dialog.FormBorderStyle = 'FixedDialog'
-    $dialog.MaximizeBox = $false
-    $dialog.MinimizeBox = $false
+    $dialog.FormBorderStyle = 'None' # Remove borda do Windows para visual clean
     $dialog.KeyPreview = $true
-    $dialog.BackColor = [System.Drawing.Color]::White
+    
+    # Verifica Dark Mode (acessa a variável do script)
+    $isDark = $false
+    if ($menuModoEscuro -and $menuModoEscuro.Checked) { $isDark = $true }
+
+    # Configuração de Cores (Paleta)
+    if ($isDark) {
+        $bgColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
+        $fgColor = [System.Drawing.Color]::WhiteSmoke
+        $inputBg = [System.Drawing.Color]::FromArgb(60, 60, 60)
+        $inputFg = [System.Drawing.Color]::White
+        $borderColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+        $btnCancelBg = $bgColor
+        $btnCancelFg = [System.Drawing.Color]::Silver
+    }
+    else {
+        $bgColor = [System.Drawing.Color]::White
+        $fgColor = [System.Drawing.Color]::FromArgb(64, 64, 64)
+        $inputBg = [System.Drawing.Color]::WhiteSmoke
+        $inputFg = [System.Drawing.Color]::Black
+        $borderColor = [System.Drawing.Color]::LightGray
+        $btnCancelBg = $bgColor
+        $btnCancelFg = [System.Drawing.Color]::DimGray
+    }
+
+    $dialog.BackColor = $bgColor
+    $dialog.ForeColor = $fgColor
     $dialog.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 
-    $label = New-Object System.Windows.Forms.Label
-    $label.Text = "Digite o COD_HEM que deseja acessar:"
-    $label.Location = New-Object System.Drawing.Point(15, 15)
-    $label.AutoSize = $true
-    $dialog.Controls.Add($label)
+    # Desenha Borda Fina Customizada
+    $dialog.Add_Paint({
+            param($sender, $e)
+            $pen = New-Object System.Drawing.Pen($borderColor, 1)
+            $rect = $sender.ClientRectangle
+            $rect.Width -= 1
+            $rect.Height -= 1
+            $e.Graphics.DrawRectangle($pen, $rect)
+        })
 
+    # Título
+    $lblTitle = New-Object System.Windows.Forms.Label
+    $lblTitle.Text = "COD_HEM"
+    $lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
+    $lblTitle.Location = New-Object System.Drawing.Point(20, 15)
+    $lblTitle.AutoSize = $true
+    $dialog.Controls.Add($lblTitle)
+    
+    # Subtítulo com instrução
+    $lblMsg = New-Object System.Windows.Forms.Label
+    $lblMsg.Text = "Digite o código de acesso:"
+    $lblMsg.Font = New-Object System.Drawing.Font("Segoe UI", 8.5)
+    $lblMsg.ForeColor = if ($isDark) { [System.Drawing.Color]::Gray } else { [System.Drawing.Color]::Gray }
+    $lblMsg.Location = New-Object System.Drawing.Point(22, 38)
+    $lblMsg.AutoSize = $true
+    $dialog.Controls.Add($lblMsg)
+
+    # TextBox
     $textBox = New-Object System.Windows.Forms.TextBox
-    $textBox.Location = New-Object System.Drawing.Point(18, 45)
-    $textBox.Size = New-Object System.Drawing.Size(260, 25)
+    $textBox.Location = New-Object System.Drawing.Point(25, 60)
+    $textBox.Size = New-Object System.Drawing.Size(290, 25)
+    $textBox.BackColor = $inputBg
+    $textBox.ForeColor = $inputFg
+    $textBox.BorderStyle = 'FixedSingle'
     $dialog.Controls.Add($textBox)
 
+    # Botão Confirmar
     $btnConfirmar = New-Object System.Windows.Forms.Button
     $btnConfirmar.Text = "Confirmar"
-    $btnConfirmar.Location = New-Object System.Drawing.Point(50, 90)
-    $btnConfirmar.Size = New-Object System.Drawing.Size(90, 30)
+    $btnConfirmar.Size = New-Object System.Drawing.Size(90, 28)
+    $btnConfirmar.Location = New-Object System.Drawing.Point(225, 110)
     $btnConfirmar.FlatStyle = 'Flat'
     $btnConfirmar.FlatAppearance.BorderSize = 0
     $btnConfirmar.BackColor = [System.Drawing.Color]::DodgerBlue
@@ -198,44 +248,59 @@ function Show-CodHemDialog {
     $btnConfirmar.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $dialog.Controls.Add($btnConfirmar)
 
+    # Botão Cancelar
     $btnCancelar = New-Object System.Windows.Forms.Button
     $btnCancelar.Text = "Cancelar"
-    $btnCancelar.Location = New-Object System.Drawing.Point(160, 90)
-    $btnCancelar.Size = New-Object System.Drawing.Size(90, 30)
+    $btnCancelar.Size = New-Object System.Drawing.Size(80, 28)
+    $btnCancelar.Location = New-Object System.Drawing.Point(135, 110)
     $btnCancelar.FlatStyle = 'Flat'
-    $btnCancelar.FlatAppearance.BorderSize = 1
-    $btnCancelar.FlatAppearance.BorderColor = [System.Drawing.Color]::LightGray
-    $btnCancelar.BackColor = [System.Drawing.Color]::White
-    $btnCancelar.ForeColor = [System.Drawing.Color]::Black
+    $btnCancelar.FlatAppearance.BorderSize = 0
+    $btnCancelar.BackColor = $btnCancelBg
+    $btnCancelar.ForeColor = $btnCancelFg
     $btnCancelar.Cursor = [System.Windows.Forms.Cursors]::Hand
     $btnCancelar.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $dialog.Controls.Add($btnCancelar)
 
-    # ENTER confirma, ESC cancela
     $dialog.AcceptButton = $btnConfirmar
     $dialog.CancelButton = $btnCancelar
 
-    # Força maiúsculas
+    # Força texto em Caixa Alta (UpperCase)
     $textBox.Add_TextChanged({
             $pos = $textBox.SelectionStart
             $textBox.Text = $textBox.Text.ToUpper()
             $textBox.SelectionStart = $pos
         })
 
-    $dialog.TopMost = $true
-    $dialog.StartPosition = "CenterParent"
+    # Lógica para permitir arrastar a janela (Drag & Drop) pois borda foi removida
+    $dragBlock = {
+        if ($_.Button -eq 'Left') {
+            $dialog.Tag = @{
+                DragStart = [System.Windows.Forms.Cursor]::Position
+                FormStart = $dialog.Location
+            }
+        }
+    }
+    $moveBlock = {
+        if ($_.Button -eq 'Left' -and $dialog.Tag) {
+            $diff = [System.Drawing.Point]::Subtract([System.Windows.Forms.Cursor]::Position, [System.Drawing.Size]$dialog.Tag.DragStart)
+            $dialog.Location = [System.Drawing.Point]::Add($dialog.Tag.FormStart, $diff)
+        }
+    }
+
+    $dialog.Add_MouseDown($dragBlock)
+    $dialog.Add_MouseMove($moveBlock)
+    $lblTitle.Add_MouseDown($dragBlock)
+    $lblTitle.Add_MouseMove($moveBlock)
+
     $result = $dialog.ShowDialog($form)
 
     if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
         $valor = $textBox.Text.Trim()
         if (-not $valor) {
-            [System.Windows.Forms.MessageBox]::Show("Digite um valor para COD_HEM.", "Aviso",
-                [System.Windows.Forms.MessageBoxButtons]::OK,
-                [System.Windows.Forms.MessageBoxIcon]::Warning) | Out-Null
+            # Feedback sonoro discreto em caso de input vazio
+            [System.Console]::Beep(500, 200)
             return
         }
-
-        # Chama a função auxiliar para atualizar o COD_HEM
         Atualizar-CodHem $valor
     }
 }
@@ -269,7 +334,7 @@ function Update-Status {
 # --- Função de Atualização de Atalhos ---
 function Update-Shortcuts($pathAtalhos, $novoCliente) {
     if (Test-Path $pathAtalhos) {
-        # Cria regex com todos os clientes conhecidos para garantir limpeza correta do nome
+        # Cria regex com todos os clientes conhecidos para garantir limpeza correta do nome antigo
         # Evita bugs como "App - Cliente - Cliente"
         $clientesConhecidos = @($comboBox.Items)
         if ($clientesConhecidos.Count -gt 0) {
@@ -310,8 +375,8 @@ function Update-Shortcuts($pathAtalhos, $novoCliente) {
 # Form principal
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Clientes Hemote Plus'
-$form.Size = New-Object System.Drawing.Size(530, 210) # Expandido para caber mensagens longas
-$form.FormBorderStyle = 'FixedSingle' # Permite exibir o ícone na barra de título
+$form.Size = New-Object System.Drawing.Size(530, 210) # Comprimento aumentado para caber mensagens longas
+$form.FormBorderStyle = 'FixedSingle' # Janela fixa, exibe ícone na barra de título
 $form.MaximizeBox = $false
 $form.StartPosition = 'Manual'
 $form.ShowInTaskbar = $false
@@ -333,7 +398,7 @@ $form.Add_Load({
 
     })
 
-# StatusStrip (rodapé Moderno e Interativo)
+# StatusStrip (Barra de Rodapé Moderna e Interativa)
 $statusStrip = New-Object System.Windows.Forms.StatusStrip
 $statusStrip.BackColor = [System.Drawing.Color]::White
 $statusStrip.SizingGrip = $false
@@ -380,7 +445,7 @@ $form.Controls.Add($painelInicio)
 
 
 
-# --- Painel Início (Modernizado) ---
+# --- Painel Início (Interface Principal Modernizada) ---
 $btnRefresh = New-Object System.Windows.Forms.Button
 $btnRefresh.Text = '↻' # Símbolo de Refresh
 $btnRefresh.Location = New-Object System.Drawing.Point(10, 13)
@@ -424,7 +489,7 @@ $btnPasta.FlatAppearance.BorderSize = 0
 $btnPasta.BackColor = [System.Drawing.Color]::WhiteSmoke
 $btnPasta.Cursor = [System.Windows.Forms.Cursors]::Hand
 
-# --- Criar ícone de pasta dinamicamente (Melhorado) ---
+# --- Criar ícone de pasta dinamicamente (ícone vetorial via desenho) ---
 $folderBmp = New-Object System.Drawing.Bitmap(20, 20) # Aumentado levemente para 20x20
 $g = [System.Drawing.Graphics]::FromImage($folderBmp)
 $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias # Suavização
@@ -454,7 +519,7 @@ $btnPasta.Add_Click({
 $painelInicio.Controls.Add($btnPasta)
 
 $msgLabel = New-Object System.Windows.Forms.Label
-$msgLabel.Location = New-Object System.Drawing.Point(10, 55) # Levemente mais para baixo
+$msgLabel.Location = New-Object System.Drawing.Point(10, 55) # Posição ajustada abaixo dos botões
 $msgLabel.Size = New-Object System.Drawing.Size(480, 40)
 $msgLabel.ForeColor = [System.Drawing.Color]::ForestGreen # Verde Sucesso
 $msgLabel.TextAlign = 'MiddleCenter' # Centralizado
@@ -473,26 +538,30 @@ $form.Controls.Add($painelSobre)
 $sobreLabel = New-Object System.Windows.Forms.Label
 $sobreLabel.Location = New-Object System.Drawing.Point(0, 0)
 $sobreLabel.AutoSize = $true
-$sobreLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9) # Mantém 9 no texto longo para caber, ou 10 se preferir
+$sobreLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $sobreLabel.Text = @"
-Clientes Hemote Plus - v11
+Clientes Hemote Plus
+Ferramenta de apoio com interface moderna e recursos personalizados.
 
-• Geral: Troca rápida de clientes e atalhos.
-• Visual: Modo Escuro, Opacidade e TopMost.
-• Ações: Atualizar (↻), SACS e Pasta Atalhos.
-• Segurança: Valida arquivos e duplicidade.
-• Sistema: Iniciar c/ Windows e Tray discreto.
-• Extra: Edição rápida do COD_HEM.
+Funcionalidades:
+  • Troca rápida entre clientes com atalhos personalizados
+  • Interface com Modo Escuro, controle de opacidade e sempre no topo
+  • Acesso rápido ao SACS e pasta de atalhos
+  • Configuração de impressoras para fichas e etiquetas
+  • Validação de arquivos e verificação de duplicidade de URLs
+  • Inicialização automática com o Windows
+  • Ícone na bandeja do sistema para acesso discreto
+  • Edição rápida do código COD_HEM
 
-Autor: Felipe Almeida
-Versão: Jan/2026
+Desenvolvido por: Felipe Almeida
+Versão: Janeiro/2026
 "@
 $painelSobre.Controls.Add($sobreLabel)
 
 # --- Barra de Menus ---
 $menuStrip = New-Object System.Windows.Forms.MenuStrip
-$menuStrip.BackColor = [System.Drawing.Color]::White # Harmonização do tema
-$menuStrip.RenderMode = 'System' # Tenta usar renderização nativa/flat se possível
+$menuStrip.BackColor = [System.Drawing.Color]::White # Cor de fundo que harmoniza com o tema claro
+$menuStrip.RenderMode = 'System' # Usa renderização nativa do sistema para integração visual
 
 $menuInicio = New-Object System.Windows.Forms.ToolStripMenuItem
 $menuInicio.Text = 'Início'
@@ -556,7 +625,201 @@ $menuValidarDuplicidade.Text = 'Validar duplicidade de URL'
 $menuValidarDuplicidade.CheckOnClick = $true
 $menuValidarDuplicidade.Add_Click({ Save-Config }) | Out-Null
 
+# --- Menu Impressoras ---
+$menuImpressoras = New-Object System.Windows.Forms.ToolStripMenuItem
+$menuImpressoras.Text = 'Impressoras'
+
+# Função para mostrar diálogo de seleção de impressoras
+function Show-PrinterDialog {
+    $dialog = New-Object System.Windows.Forms.Form
+    $dialog.Text = "Configurar Impressoras"
+    $dialog.Size = New-Object System.Drawing.Size(420, 230)
+    $dialog.StartPosition = "CenterParent"
+    $dialog.FormBorderStyle = 'FixedDialog'
+    $dialog.MaximizeBox = $false
+    $dialog.MinimizeBox = $false
+    
+    # Verifica Dark Mode
+    $isDark = $false
+    if ($menuModoEscuro -and $menuModoEscuro.Checked) { $isDark = $true }
+    
+    # Cores
+    if ($isDark) {
+        $bgColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
+        $fgColor = [System.Drawing.Color]::WhiteSmoke
+    }
+    else {
+        $bgColor = [System.Drawing.Color]::White
+        $fgColor = [System.Drawing.Color]::Black
+    }
+    
+    $dialog.BackColor = $bgColor
+    $dialog.ForeColor = $fgColor
+    
+    # Label Gráfica
+    $lblGrafica = New-Object System.Windows.Forms.Label
+    $lblGrafica.Text = "Impressora Gráfica:"
+    $lblGrafica.Location = New-Object System.Drawing.Point(20, 20)
+    $lblGrafica.Size = New-Object System.Drawing.Size(370, 20)
+    $lblGrafica.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $dialog.Controls.Add($lblGrafica)
+    
+    # ComboBox Gráfica
+    $comboGrafica = New-Object System.Windows.Forms.ComboBox
+    $comboGrafica.Location = New-Object System.Drawing.Point(20, 45)
+    $comboGrafica.Size = New-Object System.Drawing.Size(370, 25)
+    $comboGrafica.DropDownStyle = 'DropDownList'
+    $comboGrafica.BackColor = if ($isDark) { [System.Drawing.Color]::FromArgb(60, 60, 60) } else { [System.Drawing.Color]::White }
+    $comboGrafica.ForeColor = $fgColor
+    $dialog.Controls.Add($comboGrafica)
+    
+    # Label Etiqueta
+    $lblEtiqueta = New-Object System.Windows.Forms.Label
+    $lblEtiqueta.Text = "Impressora Etiqueta:"
+    $lblEtiqueta.Location = New-Object System.Drawing.Point(20, 85)
+    $lblEtiqueta.Size = New-Object System.Drawing.Size(370, 20)
+    $lblEtiqueta.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $dialog.Controls.Add($lblEtiqueta)
+    
+    # ComboBox Etiqueta
+    $comboEtiqueta = New-Object System.Windows.Forms.ComboBox
+    $comboEtiqueta.Location = New-Object System.Drawing.Point(20, 110)
+    $comboEtiqueta.Size = New-Object System.Drawing.Size(370, 25)
+    $comboEtiqueta.DropDownStyle = 'DropDownList'
+    $comboEtiqueta.BackColor = if ($isDark) { [System.Drawing.Color]::FromArgb(60, 60, 60) } else { [System.Drawing.Color]::White }
+    $comboEtiqueta.ForeColor = $fgColor
+    $dialog.Controls.Add($comboEtiqueta)
+    
+    # Carrega impressoras
+    $printers = Get-Printer | Select-Object -ExpandProperty Name
+    foreach ($printer in $printers) {
+        $comboGrafica.Items.Add($printer) | Out-Null
+        $comboEtiqueta.Items.Add($printer) | Out-Null
+    }
+    
+    # Carrega seleções atuais
+    $configIniPath = 'C:\sacs\configuracao.ini'
+    if (Test-Path $configIniPath) {
+        $content = Get-Content $configIniPath -Raw
+        
+        if ($content -match '(?im)^\s*\[FICHA_DOADOR\]\s*=\s*(.+)$') {
+            $printerName = $matches[1].Trim()
+            $comboGrafica.SelectedItem = $printerName
+        }
+        
+        if ($content -match '(?im)^\s*\[BARCODE_DOADOR\]\s*=\s*(.+)$') {
+            $printerName = $matches[1].Trim()
+            $comboEtiqueta.SelectedItem = $printerName
+        }
+    }
+    
+    # Botão Salvar
+    $btnSalvar = New-Object System.Windows.Forms.Button
+    $btnSalvar.Text = "Salvar"
+    $btnSalvar.Size = New-Object System.Drawing.Size(90, 32)
+    $btnSalvar.Location = New-Object System.Drawing.Point(300, 155)
+    $btnSalvar.FlatStyle = 'Flat'
+    $btnSalvar.FlatAppearance.BorderSize = 0
+    $btnSalvar.BackColor = [System.Drawing.Color]::DodgerBlue
+    $btnSalvar.ForeColor = [System.Drawing.Color]::White
+    $btnSalvar.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $btnSalvar.Cursor = [System.Windows.Forms.Cursors]::Hand
+    $btnSalvar.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $dialog.Controls.Add($btnSalvar)
+    
+    # Botão Cancelar
+    $btnCancelar = New-Object System.Windows.Forms.Button
+    $btnCancelar.Text = "Cancelar"
+    $btnCancelar.Size = New-Object System.Drawing.Size(90, 32)
+    $btnCancelar.Location = New-Object System.Drawing.Point(200, 155)
+    $btnCancelar.FlatStyle = 'Flat'
+    $btnCancelar.FlatAppearance.BorderSize = 0
+    $btnCancelar.BackColor = if ($isDark) { $bgColor } else { [System.Drawing.Color]::WhiteSmoke }
+    $btnCancelar.ForeColor = if ($isDark) { [System.Drawing.Color]::Silver } else { [System.Drawing.Color]::DimGray }
+    $btnCancelar.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    $btnCancelar.Cursor = [System.Windows.Forms.Cursors]::Hand
+    $btnCancelar.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $dialog.Controls.Add($btnCancelar)
+    
+    $dialog.AcceptButton = $btnSalvar
+    $dialog.CancelButton = $btnCancelar
+    
+    # Aplica Dark Mode na barra de título quando a janela for criada
+    $dialog.Add_HandleCreated({
+            try { 
+                [DarkModeHelper]::SetDarkMode($dialog.Handle, $isDark) 
+            }
+            catch {}
+        })
+    
+    $result = $dialog.ShowDialog($form)
+    
+    if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+        # Salva Gráfica
+        if ($comboGrafica.SelectedItem) {
+            Save-PrinterToConfig $comboGrafica.SelectedItem 'Grafica'
+        }
+        
+        # Salva Etiqueta
+        if ($comboEtiqueta.SelectedItem) {
+            Save-PrinterToConfig $comboEtiqueta.SelectedItem 'Etiqueta'
+        }
+    }
+}
+
+# Função auxiliar para salvar impressora no arquivo
+function Save-PrinterToConfig {
+    param($printerName, $tipo)
+    
+    $configIniPath = 'C:\sacs\configuracao.ini'
+    
+    # Cria o diretório se não existir
+    $configDir = Split-Path $configIniPath -Parent
+    if (-not (Test-Path $configDir)) {
+        New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+    }
+    
+    # Lê o conteúdo atual do arquivo ou cria um novo
+    $linhas = @()
+    if (Test-Path $configIniPath) {
+        $linhas = Get-Content $configIniPath
+    }
+    
+    # Define os parâmetros baseado no tipo
+    if ($tipo -eq 'Grafica') {
+        $parametros = @('[FICHA_DOADOR]', '[FICHA_REDOME]')
+    }
+    else {
+        $parametros = @('[BARCODE_DOADOR]', '[BARCODE_GERAL]')
+    }
+    
+    # Atualiza ou adiciona os parâmetros
+    foreach ($param in $parametros) {
+        $encontrado = $false
+        $paramEscaped = [regex]::Escape($param)
+        for ($i = 0; $i -lt $linhas.Count; $i++) {
+            if ($linhas[$i] -match "^\s*$paramEscaped\s*=") {
+                $linhas[$i] = "$param= $printerName"
+                $encontrado = $true
+            }
+        }
+        
+        if (-not $encontrado) {
+            $linhas += "$param= $printerName"
+        }
+    }
+    
+    # Salva o arquivo
+    $linhas | Set-Content $configIniPath -Encoding Default
+}
+
+# Adiciona evento de clique ao menu Impressoras
+$menuImpressoras.Add_Click({
+        Show-PrinterDialog
+    })
+
 $menuConfig.DropDownItems.Add($menuClientes)       | Out-Null
+$menuConfig.DropDownItems.Add($menuImpressoras)    | Out-Null
 $menuConfig.DropDownItems.Add($menuAlterarCodHem)  | Out-Null
 $menuConfig.DropDownItems.Add($menuValidarDuplicidade) | Out-Null
 $menuConfig.DropDownItems.Add($menuIniciarWindows) | Out-Null
@@ -672,6 +935,10 @@ $menuValidarDuplicidade.Add_MouseHover({
         $statusLabelClient.Text = 'Verificar se existe duplicidade de data_access e webupdate.'
         $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
     })
+$menuImpressoras.Add_MouseHover({ 
+        $statusLabelClient.Text = 'Configurar impressoras para fichas e etiquetas'
+        $restoreStatusTimer.Stop(); $restoreStatusTimer.Start()
+    })
 
 # Submenus de Exibição
 $menuClienteAtual.Add_MouseHover({ 
@@ -737,7 +1004,7 @@ function Apply-Theme {
     
     $statusLabelClient.ForeColor = if ($menuModoEscuro.Checked) { [System.Drawing.Color]::LightGray } else { [System.Drawing.Color]::DarkSlateGray }
     
-    # Atualiza cores dos links do rodapé (Adaptação ao Tema)
+    # Atualiza cores dos links do rodapé (Adaptação ao Tema Escuro/Claro)
     if ($menuModoEscuro.Checked) {
         $statusLabelCod.LinkColor = [System.Drawing.Color]::LightSkyBlue
         $statusLabelDir.LinkColor = [System.Drawing.Color]::Silver
@@ -749,7 +1016,7 @@ function Apply-Theme {
     
     # ComboBox
     if ($menuModoEscuro.Checked) {
-        # Hack: Muda para DropDown (editável) para aceitar cores, mas bloqueamos digitação no KeyPress
+        # Hack: Muda para DropDown (editável) para aceitar cores personalizadas, mas bloqueamos digitação no KeyPress
         $comboBox.DropDownStyle = 'DropDown' 
         $comboBox.FlatStyle = 'Flat'
         $comboBox.BackColor = [System.Drawing.Color]::FromArgb(60, 60, 60)
@@ -783,7 +1050,7 @@ function Apply-Theme {
     $form.Refresh()
 }
 
-# --- Funções auxiliares ---
+# --- Funções auxiliares de Persistência e Configuração ---
 function Save-Config {
     $opItem = ($menuOpacidade.DropDownItems | Where-Object { $_.Checked } | Select-Object -First 1)
     $opacidadeAtual = if ($opItem) { [int]$opItem.Tag } else { 100 }
@@ -838,7 +1105,7 @@ function Load-Config {
         $menuAlterarCodHem.Checked = $json.Configuracoes.AlterarCodHem
         $menuIniciarWindows.Checked = $json.Configuracoes.IniciarComWindows
         
-        # Carrega ValidarDuplicidade (padrão true se não existir no JSON para manter comportamento anterior)
+        # Carrega ValidarDuplicidade (padrão true se não existir no JSON para manter compatibilidade)
         if ($json.Configuracoes.PSObject.Properties.Match('ValidarDuplicidade').Count) {
             $menuValidarDuplicidade.Checked = $json.Configuracoes.ValidarDuplicidade
         }
@@ -865,7 +1132,7 @@ function Load-Config {
         Apply-Theme
     }
     else {
-        # Defaults para nova instalação/configuração ausente
+        # Valores padrão para nova instalação ou configuração ausente
         $menuClienteAtual.Checked = $true
         $menuCodHemAtual.Checked = $true
         $menuBotaoSacs.Checked = $true
@@ -875,7 +1142,7 @@ function Load-Config {
     Update-Status
 }
 
-# --- Função para criar/remover atalho de inicialização ---
+# --- Função para gerenciar atalho de inicialização no Windows ---
 function Set-Startup($enable) {
     $startupPath = [System.IO.Path]::Combine(
         $env:APPDATA,
@@ -899,7 +1166,7 @@ function Set-Startup($enable) {
     }
 }
 
-# --- Ícone da bandeja ---
+# --- Gerenciamento do Ícone na Área de Notificação (Tray) ---
 
 function Show-Form {
     $form.Show()
@@ -910,14 +1177,14 @@ function Show-Form {
 
 function Toggle-Form {
     if ($form.Visible -and $form.WindowState -ne 'Minimized') {
-        $form.WindowState = 'Minimized' # O evento Resize cuidará de esconder
+        $form.WindowState = 'Minimized' # O evento Resize ocultará a janela na barra de tarefas
     }
     else {
         Show-Form
     }
 }
 
-# --- Eventos de minimizar e fechar ---
+# --- Eventos de Janela para Minimizar ao Tray ---
 $form.Add_Resize({
         if ($form.WindowState -eq 'Minimized') {
             $form.Hide()
@@ -936,7 +1203,7 @@ $form.Add_FormClosing({
         }
     }) | Out-Null
 
-# --- Evento Load (Carrega Ícones e Tray) ---
+# --- Evento Load (Configuração inicial de Ícones e Tray) ---
 $form.Add_Load({
         # Tenta carregar ícone
         $icon = $null
@@ -945,18 +1212,18 @@ $form.Add_Load({
             $icon = New-Object System.Drawing.Icon($iconPath)
         }
         else {
-            # Fallback para extrair do próprio EXE
+            # Tentativa alternativa: extrair ícone do próprio executável
             try {
                 $exePath = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
                 $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
             }
             catch {
-                # Último fallback (ícone genérico)
+                # Último recurso: ícone genérico de aplicação do sistema
                 $icon = [System.Drawing.SystemIcons]::Application
             }
         }
     
-        # 1. Configura NotifyIcon (Tray)
+        # 1. Configura NotifyIcon (Ícone na Bandeja)
         $notifyIcon = New-Object System.Windows.Forms.NotifyIcon
         $notifyIcon.Icon = $icon
         $notifyIcon.Text = 'Clientes Hemote Plus'
@@ -983,7 +1250,7 @@ $form.Add_Load({
 Load-Config
 Update-Status
 
-# --- Evento: Botão Confirmar (Fluxo Principal) ---
+# --- Evento Principal: Botão Confirmar ---
 $button.Add_Click({
         $cliente = $comboBox.SelectedItem
         if (-not $cliente) { 
@@ -1030,12 +1297,12 @@ $button.Add_Click({
                 $origemCliente = $global:clientCache[$cliente].Path
             }
             else {
-                # Fallback caso cache falhe por algum motivo raro
+                # Recurso de segurança caso o cache falhe
                 $origemCliente = Join-Path $global:clientesPath $cliente
             }
 
-            # Validação Rígida: Verifica se os arquivos REALMENTE existem antes de prosseguir
-            # (Corrige o problema de alterar para uma pasta que foi esvaziada recentemente)
+            # Validação Rígida: Garante integridade verificando existência real dos arquivos
+            # (Previne erros ao selecionar pastas que foram renomeadas ou excluídas externamente)
             $testeIni = Join-Path $origemCliente '_data_access.ini'
             $testeWeb = Join-Path $origemCliente 'WebUpdate.ini'
             
@@ -1044,7 +1311,7 @@ $button.Add_Click({
                 $msgLabel.Text = 'Erro: Arquivos de configuração ausentes na pasta!'
                 $clearMsgTimer.Stop(); $clearMsgTimer.Start()
                  
-                # Opcional: Força recarregar a lista já que encontramos uma inconsistência
+                # Força recarregamento da lista para refletir o estado real do diretório
                 Load-Clientes
                 return
             }
@@ -1094,7 +1361,7 @@ $button.Add_Click({
         $clearMsgTimer.Stop(); $clearMsgTimer.Start()
     }) | Out-Null
 
-# --- Timer para limpar mensagens ---
+# --- Timer para limpar mensagens de status automaticamente ---
 $clearMsgTimer = New-Object System.Windows.Forms.Timer
 $clearMsgTimer.Interval = 5000
 $clearMsgTimer.Add_Tick({
@@ -1102,7 +1369,7 @@ $clearMsgTimer.Add_Tick({
         $clearMsgTimer.Stop()
     })
 
-# --- Loop principal da aplicação ---
+# --- Loop principal de execução da aplicação ---
 try {
     [System.Windows.Forms.Application]::Run($form)
 }
