@@ -7,7 +7,7 @@ description: Atualiza o manual PDF a partir do README.md
 // turbo
 2. Gerar o arquivo PDF colorido usando npx markdown-pdf com estilos
 ```bash
-npx -y markdown-pdf "README.md" --style "manual-style.css" -o "Manual.pdf"
+npx -y markdown-pdf "README.md" -s "manual-style.css" -o "Manual.pdf"
 ```
 
 3. Verifique se o arquivo Manual.pdf foi gerado corretamente no diretório atual.

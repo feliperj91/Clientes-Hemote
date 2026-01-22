@@ -2,7 +2,7 @@
 
 **Ferramenta de apoio com interface moderna e recursos personalizados.**
 
-O **Clientes Hemote Plus** automatiza a substituição de arquivos de configuração (`_data_access.ini` e `WebUpdate.ini`), atualização de atalhos e configuração de impressoras, operando discretamente a partir da bandeja do sistema (System Tray).
+O **Clientes Hemote Plus** automatiza a substituição de arquivos de configuração (`_data_access.ini` e `WebUpdate.ini`), atualização de atalhos e configuração de impressoras, operando discretamente a partir da Área de Notificação (System Tray).
 
 ---
 
@@ -15,7 +15,7 @@ O **Clientes Hemote Plus** automatiza a substituição de arquivos de configura�
 3.  **🎨 Interface Dark Mode:**
     *   Tema escuro aprimorado para conforto visual e integração com o estilo Windows 10/11.
 4.  **🖱️ Controle via System Tray:**
-    *   Minimização e restauração da interface através de duplo clique no ícone da bandeja.
+    *   Minimização e restauração da interface através de duplo clique no ícone da Área de Notificação.
 5.  **✨ Gerenciamento de Atalhos:**
     *   Renomeação automática dos atalhos no diretório `Hemote Plus Update` para refletir o cliente ativo.
 6.  **⚡ Inicialização Automática:**
@@ -34,7 +34,7 @@ O **Clientes Hemote Plus** automatiza a substituição de arquivos de configura�
     *   `C:\SACS`: Diretório raiz do sistema.
     *   `C:\SACS\CLIENTES`: Repositório das pastas de configuração de cada cliente.
     *   `C:\SACS\atalhos\Hemote Plus Update`: Diretório alvo para renomeação dinâmica de atalhos.
-    *   `C:\sacs\configuracao.ini`: Arquivo de configuração de impressoras (criado automaticamente).
+    *   `C:\sacs\configuracao.ini`: Arquivo de configuração de impressoras.
 
 ---
 
@@ -42,7 +42,7 @@ O **Clientes Hemote Plus** automatiza a substituição de arquivos de configura�
 
 ### 1. Inicialização
 1.  Execute o `Clientes Hemote.exe`.
-2.  A aplicação iniciará minimizada na bandeja do sistema.
+2.  A aplicação iniciará minimizada na Área de Notificação.
     *   ℹ **Nota:** O ícone pode estar oculto no menu de ícones ocultos (`^`) da barra de tarefas.
 
 ### 2. Configuração Inicial
@@ -61,7 +61,7 @@ Configure as impressoras para fichas e etiquetas:
     *   Os parâmetros `[FICHA_DOADOR]`, `[FICHA_REDOME]`, `[BARCODE_DOADOR]` e `[BARCODE_GERAL]` são atualizados.
 
 ### 4. Troca de Ambiente
-1.  Restaure a janela com duplo clique no ícone da bandeja.
+1.  Restaure a janela com duplo clique no ícone da Área de Notificação.
 2.  Caso tenha adicionado pastas recentemente, utilize o botão **Atualizar (↻)**.
 3.  Selecione o cliente desejado na lista suspensa.
 4.  **Atalhos Rápidos:** O ícone de **Pasta Amarela** ao lado do botão Confirmar abre diretamente o diretório de atalhos (`C:\SACS\atalhos\Hemote Plus Update`) para verificação rápida.
@@ -81,7 +81,7 @@ No menu **Exibição**:
 
 ### 7. Encerramento
 Para encerrar a execução do processo:
-1.  Clique com o **botão direito** no ícone da bandeja.
+1.  Clique com o **botão direito** no ícone da Área de Notificação.
 2.  Selecione **Sair**.
 
 ---
@@ -101,7 +101,6 @@ Para encerrar a execução do processo:
 > *   `[FICHA_DOADOR]` e `[FICHA_REDOME]`: Impressora gráfica para fichas.
 > *   `[BARCODE_DOADOR]` e `[BARCODE_GERAL]`: Impressora de etiquetas para códigos de barras.
 >
-> ℹ **Nota:** Este arquivo é criado automaticamente ao configurar as impressoras pela primeira vez.
 
 ---
 
