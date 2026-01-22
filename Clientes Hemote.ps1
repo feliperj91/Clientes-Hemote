@@ -446,27 +446,87 @@ $form.Controls.Add($painelInicio)
 
 
 # --- Painel Início (Interface Principal Modernizada) ---
+# --- Criar ícone de Refresh dinamicamente (ícone vetorial via desenho) ---
+$refreshBmp = New-Object System.Drawing.Bitmap(30, 30)
+$gRef = [System.Drawing.Graphics]::FromImage($refreshBmp)
+$gRef.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+$penRef = New-Object System.Drawing.Pen([System.Drawing.Color]::DimGray, 2.5)
+$penRef.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+$penRef.EndCap = [System.Drawing.Drawing2D.LineCap]::ArrowAnchor
+
+# Desenha duas setas curvas formando um círculo
+$gRef.DrawArc($penRef, 6, 6, 18, 18, 45, 170)  # Arco superior
+$gRef.DrawArc($penRef, 6, 6, 18, 18, 225, 170) # Arco inferior
+$gRef.Dispose()
+
 $btnRefresh = New-Object System.Windows.Forms.Button
-$btnRefresh.Text = '↻' # Símbolo de Refresh
+$btnRefresh.Image = $refreshBmp
 $btnRefresh.Location = New-Object System.Drawing.Point(10, 13)
 $btnRefresh.Size = New-Object System.Drawing.Size(30, 30)
 $btnRefresh.FlatStyle = 'Flat'
 $btnRefresh.FlatAppearance.BorderSize = 0
-$btnRefresh.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 14, [System.Drawing.FontStyle]::Bold)
 $btnRefresh.Cursor = [System.Windows.Forms.Cursors]::Hand
 $btnRefresh.TextAlign = 'MiddleCenter'
+
+# Tooltip para clareza
+$toolTipRefresh = New-Object System.Windows.Forms.ToolTip
+$toolTipRefresh.SetToolTip($btnRefresh, "Atualizar lista de clientes")
+
 $btnRefresh.Add_Click({ 
         Load-Clientes
         Update-Status 
     })
 $painelInicio.Controls.Add($btnRefresh)
 
+# ComboBox Modernizado (OwnerDraw)
 $comboBox = New-Object System.Windows.Forms.ComboBox
-$comboBox.Location = New-Object System.Drawing.Point(45, 15) # Deslocado para direita
-$comboBox.Size = New-Object System.Drawing.Size(295, 28) # Reduzido para caber
+$comboBox.Location = New-Object System.Drawing.Point(45, 14) # Ajuste fino vertical
+$comboBox.Size = New-Object System.Drawing.Size(295, 30)
 $comboBox.DropDownStyle = 'DropDownList'
-$comboBox.FlatStyle = 'System' # Usa renderização nativa (corrige fundo azul)
-$comboBox.Add_KeyPress({ $_.Handled = $true }) # Previne digitação no modo DropDown (Dark Mode Hack)
+$comboBox.FlatStyle = 'Flat'
+$comboBox.Font = New-Object System.Drawing.Font("Segoe UI", 11) # Fonte um pouco maior
+$comboBox.DrawMode = [System.Windows.Forms.DrawMode]::OwnerDrawFixed
+$comboBox.ItemHeight = 24 # Altura da linha maior para visual moderno
+
+# Evento de desenho customizado para itens da lista
+$comboBox.Add_DrawItem({
+    param($sender, $e)
+    if ($e.Index -lt 0) { return }
+
+    $g = $e.Graphics
+    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
+    
+    # Cores
+    $isSelected = ($e.State -band [System.Windows.Forms.DrawItemState]::Selected)
+    $bgColor = if ($isSelected) { [System.Drawing.Color]::FromArgb(230, 240, 255) } else { [System.Drawing.Color]::White } # Azul e Branco Clean
+    $textColor = if ($isSelected) { [System.Drawing.Color]::FromArgb(0, 100, 200) } else { [System.Drawing.Color]::FromArgb(64, 64, 64) }
+
+    # Ajuste para Dark Mode (se fundo do controle for escuro)
+    if ($sender.BackColor.R -lt 100) {
+        $bgColor = if ($isSelected) { [System.Drawing.Color]::FromArgb(70, 70, 70) } else { [System.Drawing.Color]::FromArgb(45, 45, 48) }
+        $textColor = if ($isSelected) { [System.Drawing.Color]::White } else { [System.Drawing.Color]::LightGray }
+    }
+
+    # Desenha Fundo
+    $brushBg = New-Object System.Drawing.SolidBrush($bgColor)
+    $g.FillRectangle($brushBg, $e.Bounds)
+
+    # Desenha Texto Centralizado Verticalmente
+    $brushText = New-Object System.Drawing.SolidBrush($textColor)
+    $text = $sender.Items[$e.Index]
+    
+    # Centraliza texto verticalmente
+    $yPos = $e.Bounds.Y + ($e.Bounds.Height - $e.Font.Height) / 2
+    $g.DrawString($text, $e.Font, $brushText, ($e.Bounds.X + 5), $yPos)
+    
+    # Opcional: Desenha borda de foco customizada ou remove a padrão
+    if ($isSelected) {
+       # $penFocus = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(180, 200, 250))
+       # $g.DrawRectangle($penFocus, $e.Bounds.X, $e.Bounds.Y, $e.Bounds.Width - 1, $e.Bounds.Height - 1)
+    }
+})
+
+$comboBox.Add_KeyPress({ $_.Handled = $true }) # Previne digitação
 $painelInicio.Controls.Add($comboBox)
 
 $button = New-Object System.Windows.Forms.Button
